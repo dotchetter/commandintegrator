@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from timeit import default_timer as timer
 
-VERSION = 1.2.0
+VERSION = '1.2.0'
 
 """
 Details:
