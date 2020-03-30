@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from timeit import default_timer as timer
 
-VERSION = '1.2.0'
+VERSION = '1.2.1'
 
 """
 Details:
@@ -41,6 +41,37 @@ Module details:
     framework with your application - please read the full
     documentation which can be found in the wiki on GitHub
 """
+
+def scheduledmethod(func):
+    """
+    Scheduled method decorator. In certain applications
+    the ability to automatically call functions by the
+    means of a schedule in some manner, for example with
+    a schedule.Scheduler() instance object, it can be 
+    desired to direct messages to different channels in 
+    the front end application such as a Discord or Slack
+    server. If, however the method is called as per usual,
+    the bahavior is not altered. Add this decorator above
+    a method in your stack, and then add the parameter 
+    'channel' when you call it through the scheduler routine.
+
+    The returned value from this will be a dictionary where
+    the function output is under the 'result' key, and the
+    channel is under the 'channel' key, as seen below.
+    """
+    def _inner(*args, **kwargs):
+        try:
+            channel = kwargs['channel']
+        except KeyError:
+            return func(*args, **kwargs)
+        else:
+            kwargs.pop('channel')
+            return {
+                'result': func(*args, **kwargs), 
+                'channel': channel
+            }
+    return _inner
+    
 
 
 class PollCache:
