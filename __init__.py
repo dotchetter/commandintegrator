@@ -285,6 +285,16 @@ class FeatureCommandParserABC(ABC):
     def ignored_chars(self, table: dict):
         pass
 
+    @property
+    @abstractmethod
+    def interactive_methods(self) -> list:
+        return
+    
+    @interactive_methods.setter
+    @abstractmethod
+    def interactive_methods(self):
+        pass
+
 
 class FeatureCommandParserBase(FeatureCommandParserABC):
 
@@ -333,6 +343,7 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
             except:
                 simple_subcategories.append(key)
 
+
         for subcategory in complex_subcategories:
             for word in message.content:
                 word = strip_chars(word)
@@ -380,6 +391,19 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
             raise TypeError(f'category must be dict, got {type(table)}')
         self._ignored_chars = table
     
+    @property
+    def interactive_methods(self) -> tuple:
+        return self._interactive_methods
+    
+    @interactive_methods.setter
+    def interactive_methods(self, arg: tuple):
+        if not isinstance(arg, tuple):
+            raise TypeError(f'interactive methods must be enclosed in tuple, got {type(arg)}')
+        for i in arg:
+            if not callable(i):
+                raise TypeError(f'Warning: interactive method not callable: {i}')
+        self._interactive_methods = arg
+    
 
 class FeatureABC(ABC):
     """ 
@@ -422,16 +446,6 @@ class FeatureABC(ABC):
     def command_parser(self, command_parser: FeatureCommandParserBase):
         pass
 
-    @property
-    @abstractmethod
-    def interactive_methods(self) -> list:
-        return
-    
-    @interactive_methods.setter
-    @abstractmethod
-    def interactive_methods(self):
-        pass
-
 
 class FeatureBase(FeatureABC):
     """
@@ -450,10 +464,12 @@ class FeatureBase(FeatureABC):
             if feature_function is None:
                 return None
 
-            if feature_function in self.interactive_methods:
+            if feature_function in self._command_parser.interactive_methods:
                 return lambda message = message: feature_function(message)
         except KeyError:
             raise NotImplementedError(f'no mapped function call for {feature_function} in self')
+
+        return feature_function
 
     def __repr__(self):
         return f'Feature({__class__.__name__})'
@@ -488,19 +504,6 @@ class FeatureBase(FeatureABC):
         if not isinstance(command_parser, FeatureCommandParserBase):
             raise TypeError(f'command_parser must be FeatureCommandParserBase, got {type(command_parser)}')
         self._command_parser = command_parser
-
-    @property
-    def interactive_methods(self) -> tuple:
-        return self._interactive_methods
-    
-    @interactive_methods.setter
-    def interactive_methods(self, arg: tuple):
-        if not isinstance(arg, tuple):
-            raise TypeError(f'interactive methods must be enclosed in tuple, got {type(arg)}')
-        for i in arg:
-            if not callable(i):
-                raise TypeError(f'Warning: interactive method not callable: {i}')
-        self._interactive_methods = arg
 
 
 class CommandProcessor:
