@@ -1,3 +1,4 @@
+import pytz
 import random
 import json
 import discord
@@ -14,7 +15,7 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from timeit import default_timer as timer
 
-VERSION = '1.2.1'
+VERSION = '1.2.2'
 
 """
 Details:
@@ -41,6 +42,25 @@ Module details:
     framework with your application - please read the full
     documentation which can be found in the wiki on GitHub
 """
+
+def is_dst(dt: datetime = datetime.now(), timezone: str = "Europe/Stockholm"):
+    """
+    Method for returning a bool whether or not a timezone
+    currently is in daylight savings time, useful for servers
+    that run systems outside of the user timezone.
+    :param dt:
+        datetime object, default is .now()
+    :param timezone:
+        string, timezone to give pytz for the dst query.
+        look up available timezones at this url:
+        https://stackoverflow.com/questions/13866926/is-there-a-list-of-pytz-timezones
+    :returns:
+        bool
+    """
+    timezone = pytz.timezone(timezone)
+    timezone_aware_date = timezone.localize(dt, is_dst = None)
+    return timezone_aware_date.tzinfo._dst.seconds != 0
+
 
 def scheduledmethod(func):
     """
