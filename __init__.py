@@ -350,6 +350,7 @@ class FeatureCommandParserABC(ABC):
 class FeatureCommandParserBase(FeatureCommandParserABC):
 
     def __init__(self, *args, **kwargs):
+        self.interactive_methods = tuple()
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
