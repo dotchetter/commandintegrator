@@ -43,6 +43,17 @@ Module details:
     documentation which can be found in the wiki on GitHub
 """
 
+@dataclass
+class _cim:
+    """
+    This class is only used as a namespace
+    for internal messages used by exceptions
+    or elsewhere by CommandIntegrator classes
+    and functions. Not for instantiating.
+    """
+    warn: str = "CommandIntegrator WARNING"
+    err: str = "CommandIntegrator ERROR"
+
 def is_dst(dt: datetime = datetime.now(), timezone: str = "Europe/Stockholm"):
     """
     Method for returning a bool whether or not a timezone
@@ -354,7 +365,7 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
         super().__init__(*args, **kwargs)
 
     def __repr__(self):
-        return f'FeatureCommandParser({self.category})'
+        return f'FeatureCommandParser({self.callbacks})'
 
     def __contains__(self, word: str) -> bool:
         return word in self._keywords
@@ -433,7 +444,7 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
     @callbacks.setter
     def callbacks(self, callbacks: dict):
         if not isinstance(callbacks, dict):
-            raise TypeError(f'callbacks must be dict, got {type(callbacks)}')
+            raise TypeError(f'{_cim.warn} callbacks must be dict, got {type(callbacks)}')
         self._callbacks = callbacks
 
     @property
@@ -443,7 +454,7 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
     @ignored_chars.setter
     def ignored_chars(self, table: dict):
         if not isinstance(table, dict):
-            raise TypeError(f'category must be dict, got {type(table)}')
+            raise TypeError(f'{_cim.warn} category must be dict, got {type(table)}')
         self._ignored_chars = table
     
     @property
@@ -453,10 +464,10 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
     @interactive_methods.setter
     def interactive_methods(self, arg: tuple):
         if not isinstance(arg, tuple):
-            raise TypeError(f'interactive methods must be enclosed in tuple, got {type(arg)}')
+            raise TypeError(f'{_cim.warn} interactive methods must be enclosed in tuple, got {type(arg)}')
         for i in arg:
             if not callable(i):
-                raise TypeError(f'Warning: interactive method not callable: {i}')
+                raise TypeError(f'{_cim.warn} Warning: interactive method not callable: {i}')
         self._interactive_methods = arg
     
 
@@ -522,7 +533,7 @@ class FeatureBase(FeatureABC):
             if feature_function in self._command_parser.interactive_methods:
                 return lambda message = message: feature_function(message)
         except KeyError:
-            raise NotImplementedError(f'no mapped function call for {feature_function} in self')
+            raise NotImplementedError(f'{_cim.warn} no mapped function call for {feature_function} in self')
 
         return feature_function
 
@@ -536,7 +547,7 @@ class FeatureBase(FeatureABC):
     @mapped_pronouns.setter
     def mapped_pronouns(self, pronouns: tuple = ()):
         if not isinstance(pronouns, tuple):
-            raise TypeError(f'pronouns must be enclosed in a tuple, got {type(pronouns)}')
+            raise TypeError(f'{_cim.warn} pronouns must be enclosed in a tuple, got {type(pronouns)}')
                 
         self._mapped_pronouns = list(pronouns)
         self._mapped_pronouns.insert(0, CommandPronoun.UNIDENTIFIED)
@@ -557,7 +568,7 @@ class FeatureBase(FeatureABC):
     @command_parser.setter
     def command_parser(self, command_parser: FeatureCommandParserBase):
         if not isinstance(command_parser, FeatureCommandParserBase):
-            raise TypeError(f'command_parser must be FeatureCommandParserBase, got {type(command_parser)}')
+            raise TypeError(f'{_cim.warn} command_parser must inherit from FeatureCommandParserBase')
         self._command_parser = command_parser
 
 
@@ -583,7 +594,7 @@ class CommandProcessor:
     @features.setter
     def features(self, features: tuple):
         if not isinstance(features, tuple):
-            raise TypeError(f'expected tuple, got {type(features)}')
+            raise TypeError(f'{_cim.warn} expected tuple, got {type(features)}')
         
         for feature in features:
             self._feature_pronoun_mapping[feature] = feature.mapped_pronouns
@@ -604,7 +615,7 @@ class CommandProcessor:
         try:
             return self._interpret(message)
         except Exception as e:
-            sys.stderr.write(f'Error occured in CommandProcessor _interpret function: {e}')
+            sys.stderr.write(f'{_cim.err} Error occured in CommandProcessor _interpret function: {e}')
             return Interpretation(error = traceback.format_exc(),
                         response = lambda: f'CommandProcessor: Internal error, see logs.',
                         original_message = tuple(message.content))
