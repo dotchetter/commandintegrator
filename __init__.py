@@ -15,11 +15,11 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from timeit import default_timer as timer
 
-VERSION = '1.2.2'
+VERSION = '1.2.3'
 
 """
 Details:
-    2020-03-10
+    2020-03-31
     
     CommandIntegrator framework source file
 
@@ -420,7 +420,10 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
     @keywords.setter
     def keywords(self, keywords: tuple):
         if not isinstance(keywords, tuple):
-            raise TypeError(f'keywords must be tuple, got {type(keywords)}')
+            raise TypeError(f'{_cim.warn} keywords must be tuple, got {type(keywords)}')
+        for i in keywords:
+            if not isinstance(i, str):
+                raise TypeError(f'{_cim.warn} keyword "{i}" must be str, got {type(i)}')
         self._keywords = keywords
 
     @property
