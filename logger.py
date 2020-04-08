@@ -27,7 +27,7 @@ if not os.path.isdir(LOG_DIR):
 
 handler = logging.FileHandler(filename = LOG_FILE_FULLPATH, encoding = 'utf-8', mode = 'w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-log = logging.getLogger('robbottherobot')
+log = logging.getLogger('CI Logger')
 log.setLevel(logging.DEBUG)
 log.addHandler(handler)
 

@@ -274,8 +274,8 @@ class Interpretation:
     the message. 
     """
     command_pronouns: tuple(CommandPronoun) = ()
-    feature_name: str = None,
-    callback_binding: str = None,
+    feature_name: str = None
+    callback_binding: str = None
     original_message: tuple = ()
     response: callable = None
     error: Exception = None
