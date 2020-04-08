@@ -98,7 +98,7 @@ class RestApiHandle:
 		self.last_api_call = datetime.now()
 		return response
 
-	def post(self, headers: dict) -> str:
+	def post(self, headers: dict) -> dict:
 		"""
 		Send a POST request to the API uri configured.
 		since the headers are ambigous for this class
@@ -110,6 +110,6 @@ class RestApiHandle:
 			the call you wish to make to the API.
 			Example: {'language': 'english'}
 		:returns: 
-			str, response from the API response.
+			dict, response from the API response.
 		"""
 		return json.loads((requests.post(url = self.uri, data = headers)).text)
