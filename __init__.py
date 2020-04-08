@@ -82,7 +82,7 @@ def scheduledmethod(func):
     desired to direct messages to different channels in 
     the front end application such as a Discord or Slack
     server. If, however the method is called as per usual,
-    the bahavior is not altered. Add this decorator above
+    the behavior is not altered. Add this decorator above
     a method in your stack, and then add the parameter 
     'channel' when you call it through the scheduler routine.
 
