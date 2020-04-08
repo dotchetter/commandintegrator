@@ -15,11 +15,11 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from timeit import default_timer as timer
 
-VERSION = '1.2.3'
+VERSION = '1.2.4'
 
 """
 Details:
-    2020-03-31
+    2020-04-08
     
     CommandIntegrator framework source file
 
