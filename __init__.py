@@ -275,7 +275,6 @@ class Interpretation:
     """
     command_pronouns: tuple(CommandPronoun) = ()
     feature_name: str = None
-    callback_binding: str = None
     original_message: tuple = ()
     response: callable = None
     error: Exception = None
@@ -655,7 +654,6 @@ class CommandProcessor:
                 return Interpretation(
                     command_pronouns = found_pronouns,
                     feature_name = feature.__class__.__name__,
-                    callback_binding = None,
                     response = lambda: random.choice(self._default_responses['NoImplementation']),
                     original_message = tuple(message.content),
                     error = e)
@@ -665,12 +663,10 @@ class CommandProcessor:
                 return Interpretation(
                     command_pronouns = found_pronouns,
                     feature_name = feature.__class__.__name__,
-                    callback_binding = None,
                     response = return_callable,
                     original_message = tuple(message.content))
 
         return Interpretation(command_pronouns = found_pronouns,
             feature_name = feature.__class__.__name__,
-            callback_binding = None,
             response = lambda: random.choice(self._default_responses['NoSubCategory']),
             original_message = tuple(message.content))
