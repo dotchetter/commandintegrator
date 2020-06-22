@@ -1,15 +1,20 @@
 import sys
 import os
 import json
-import logging
 import itertools
-import apihandles
-import framework
-import PollCache
+import logging
+from dataclasses import dataclass
 from datetime import datetime
-from .logger import logger
 from pathlib import Path
+from .apihandles import RestApiHandle
+from .baseclasses import FeatureBase, FeatureCommandParserBase
+from .commandprocessor import CommandProcessor
+from .interpretation import Interpretation
+from .pollcache import PollCache
+from .decorators import Logger as logger
+from .decorators import scheduledmethod
 
+VERSION = '1.2.5'
 
 # ------- NOTES: COMMANDINTEGRATOR .SETTINGS FILE  ------- #
 """
@@ -89,3 +94,34 @@ yourself the founder of an easteregg.
 // Simon Olofsson, lead developer and founder of CommandIntegrator
 
 """
+
+# --- Methods and classes used internally by CommandIntegrator ---- #
+ 
+def is_dst(dt: datetime = datetime.now(), timezone: str = "Europe/Stockholm"):
+    """
+    Method for returning a bool whether or not a timezone
+    currently is in daylight savings time, useful for servers
+    that run systems outside of the user timezone.
+    :param dt:
+        datetime object, default is .now()
+    :param timezone:
+        string, timezone to give pytz for the dst query.
+        look up available timezones at this url:
+        https://stackoverflow.com/questions/13866926/is-there-a-list-of-pytz-timezones
+    :returns:
+        bool
+    """
+    timezone = pytz.timezone(timezone)
+    timezone_aware_date = timezone.localize(dt, is_dst = None)
+    return timezone_aware_date.tzinfo._dst.seconds != 0
+
+@dataclass
+class _cim:
+    """
+    This class is only used as a namespace
+    for internal messages used by exceptions
+    or elsewhere by CommandIntegrator classes
+    and functions. Not for instantiating.
+    """
+    warn: str = "CommandIntegrator WARNING"
+    err: str = "CommandIntegrator ERROR"
