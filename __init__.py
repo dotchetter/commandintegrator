@@ -3,6 +3,7 @@ import os
 import json
 import itertools
 import logging
+import pytz
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -13,6 +14,8 @@ from .interpretation import Interpretation
 from .pollcache import PollCache
 from .decorators import Logger as logger
 from .decorators import scheduledmethod
+from .commandparser import CommandParser
+from .pronounlookuptable import PronounLookupTable
 
 VERSION = '1.2.5'
 
@@ -48,7 +51,7 @@ APPEND_LOGFILES = False
 if not os.path.isfile(CONFIG_FILE_FULLPATH):
     _msg = f'CommandIntegrator: Could not find config file ' \
            f'{CONFIG_FILE_NAME} in {CONFIG_FILE_DIR}'
-    raise FileNotFoundError(_msg)
+    sys.stderr.write(_msg)
 
 # --------- Configure according to the settings in file -------- #
 
@@ -58,8 +61,8 @@ try:
         APPEND_LOGFILES = settings['logfile_append']
         LOG_FILE_DIR = Path(settings['log_dir'])
         LOG_FILE_NAME = Path(settings['log_filename'])
-except Exception as e:
-    raise FileExistsError(f'CommandIntegrator: Could not access file: {e}')
+except Exception :
+    sys.stderr.write(f'{_cim.warn}: Could not access settings file, proceeding with defaults')
 
 if not os.path.isdir(LOG_FILE_DIR):
     os.mkdir(LOG_FILE_DIR)
