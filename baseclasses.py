@@ -1,27 +1,24 @@
 import pytz
 import random
 import json
-import discord
 import traceback
 import sys
-from logger import logger
-from enumerators import CommandPronoun
+
+import models
 from ast import literal_eval
 from pprint import pprint
 from os import system
 from datetime import datetime, timedelta, time
 from enum import Enum, auto
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from timeit import default_timer as timer
+from .enumerators import CommandPronoun
 
-VERSION = '1.2.5'
 
 """
 Details:
-    2020-04-08
+    2020-006-21
     
-    CommandIntegrator framework source file
+    CommandIntegrator framework baseclass source file
 
 Module details:
     
