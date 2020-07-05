@@ -3,19 +3,23 @@ import os
 import json
 import itertools
 import logging
-import pytz
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from .apihandles import RestApiHandle
-from .baseclasses import FeatureBase, FeatureCommandParserBase
-from .commandprocessor import CommandProcessor
-from .interpretation import Interpretation
-from .pollcache import PollCache
-from .decorators import Logger as logger
-from .decorators import scheduledmethod
-from .commandparser import CommandParser
-from .pronounlookuptable import PronounLookupTable
+
+from tools.apihandles import RestApiHandle
+from tools.pollcache import PollCache
+from baseclasses.baseclasses import FeatureBase, FeatureCommandParserBase
+from core.commandprocessor import CommandProcessor
+from core.interpretation import Interpretation
+from core.decorators import Logger as logger
+from core.decorators import scheduledmethod
+from core.pronounlookuptable import PronounLookupTable
+from core.enumerators import CommandPronoun
+from core.internals import _cim, is_dst
+
+from models.commandparser import CommandParser
+from models.feature import Feature
+from models.message import Message
 
 VERSION = '1.2.5'
 
@@ -40,13 +44,18 @@ CONFIG_FILE_DIR = Path(os.path.split(os.path.abspath(__file__))[0])
 CONFIG_FILE_NAME = Path('commandintegrator.settings')
 CONFIG_FILE_FULLPATH = CONFIG_FILE_DIR / CONFIG_FILE_NAME
 
+LANGUAGE_FILE_DIR = CONFIG_FILE_DIR
+LANGUAGE_FILE_NAME = Path('language.json')
+LANGUAGE_FILE_FULLPATH = LANGUAGE_FILE_DIR / LANGUAGE_FILE_NAME
+
 # Failsafe defaults
 LOG_FILE_DIR = Path('.')
-LOG_FILE_NAME = Path('runtime.log')
+LOG_FILE_NAME = Path('commandintegrator.log')
 LOG_FILE_FULLPATH = Path('.')
 APPEND_LOGFILES = False
+CHOSEN_LANGUAGE = "en-us"
 
-# -------------------- Assert file presence -------------------- # 
+# ---------------- Assert settings file presence --------------- # 
 
 if not os.path.isfile(CONFIG_FILE_FULLPATH):
     _msg = f'CommandIntegrator: Could not find config file ' \
@@ -54,13 +63,13 @@ if not os.path.isfile(CONFIG_FILE_FULLPATH):
     sys.stderr.write(_msg)
 
 # --------- Configure according to the settings in file -------- #
-
 try: 
     with open(CONFIG_FILE_FULLPATH, 'r', encoding = 'utf-8') as f:
         settings = json.loads(f.read())
         APPEND_LOGFILES = settings['logfile_append']
         LOG_FILE_DIR = Path(settings['log_dir'])
         LOG_FILE_NAME = Path(settings['log_filename'])
+        CHOSEN_LANGUAGE = settings['chosen_language']
 except Exception :
     sys.stderr.write(f'{_cim.warn}: Could not access settings file, proceeding with defaults')
 
@@ -70,9 +79,7 @@ if not os.path.isdir(LOG_FILE_DIR):
 LOG_FILE_FULLPATH = LOG_FILE_DIR / LOG_FILE_NAME
 
 # ----------------- Set up logging preferences ------------------ # 
-
 append_switch = {True: 'a+', False: 'w'}
-
 handler = logging.FileHandler(filename = LOG_FILE_FULLPATH, 
                               encoding = 'utf-8', 
                               mode = append_switch[APPEND_LOGFILES])
@@ -98,33 +105,13 @@ yourself the founder of an easteregg.
 
 """
 
-# --- Methods and classes used internally by CommandIntegrator ---- #
- 
-def is_dst(dt: datetime = datetime.now(), timezone: str = "Europe/Stockholm"):
-    """
-    Method for returning a bool whether or not a timezone
-    currently is in daylight savings time, useful for servers
-    that run systems outside of the user timezone.
-    :param dt:
-        datetime object, default is .now()
-    :param timezone:
-        string, timezone to give pytz for the dst query.
-        look up available timezones at this url:
-        https://stackoverflow.com/questions/13866926/is-there-a-list-of-pytz-timezones
-    :returns:
-        bool
-    """
-    timezone = pytz.timezone(timezone)
-    timezone_aware_date = timezone.localize(dt, is_dst = None)
-    return timezone_aware_date.tzinfo._dst.seconds != 0
-
-@dataclass
-class _cim:
-    """
-    This class is only used as a namespace
-    for internal messages used by exceptions
-    or elsewhere by CommandIntegrator classes
-    and functions. Not for instantiating.
-    """
-    warn: str = "CommandIntegrator WARNING"
-    err: str = "CommandIntegrator ERROR"
+# ------------- Assert file precense and load language ------------ #
+try:
+    with open(LANGUAGE_FILE_FULLPATH, 'r', encoding = 'utf-8') as f:
+        language_file = json.loads(f.read())
+        pronoun_identifiers = language_file['pronoun_identifiers']
+        CommandProcessor.DEFAULT_RESPONSES = language_file['default_responses']
+        PronounLookupTable.assign_pronoun_identifiers(pronoun_identifiers, CHOSEN_LANGUAGE)
+except Exception as e:
+    sys.stderr.write(f'{_cim.err}: Could not load pronouns for language: {CHOSEN_LANGUAGE}')
+    sys.exit()
