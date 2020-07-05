@@ -3,12 +3,13 @@ import random
 import traceback
 
 from collections.abc import Iterable
-from models.message import Message
-from baseclasses.baseclasses import FeatureBase
 
 from .internals import _cim
-from .pronounlookuptable import PronounLookupTable
 from .interpretation import Interpretation
+from .pronounlookuptable import PronounLookupTable
+
+from ..models.message import Message
+from ..baseclasses.baseclasses import FeatureBase
 
 """
 Details:

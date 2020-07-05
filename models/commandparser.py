@@ -1,4 +1,4 @@
-from baseclasses.baseclasses import FeatureCommandParserBase
+from ..baseclasses.baseclasses import FeatureCommandParserBase
 
 """
 Details:

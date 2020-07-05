@@ -1,4 +1,4 @@
-from baseclasses.baseclasses import FeatureBase
+from ..baseclasses.baseclasses import FeatureBase
 
 """
 Details:

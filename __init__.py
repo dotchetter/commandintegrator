@@ -6,20 +6,20 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-from tools.apihandles import RestApiHandle
-from tools.pollcache import PollCache
-from baseclasses.baseclasses import FeatureBase, FeatureCommandParserBase
-from core.commandprocessor import CommandProcessor
-from core.interpretation import Interpretation
-from core.decorators import Logger as logger
-from core.decorators import scheduledmethod
-from core.pronounlookuptable import PronounLookupTable
-from core.enumerators import CommandPronoun
-from core.internals import _cim, is_dst
+from .tools.apihandles import RestApiHandle
+from .tools.pollcache import PollCache
+from .baseclasses.baseclasses import FeatureBase, FeatureCommandParserBase
+from .core.commandprocessor import CommandProcessor
+from .core.interpretation import Interpretation
+from .core.decorators import Logger as logger
+from .core.decorators import scheduledmethod
+from .core.pronounlookuptable import PronounLookupTable
+from .core.enumerators import CommandPronoun
+from .core.internals import _cim, is_dst
 
-from models.commandparser import CommandParser
-from models.feature import Feature
-from models.message import Message
+from .models.commandparser import CommandParser
+from .models.feature import Feature
+from .models.message import Message
 
 VERSION = '1.2.5'
 
