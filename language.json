@@ -1,0 +1,113 @@
+{
+	"default_responses": {
+	
+		"NoImplementation": [
+			"There's an answer to this question, but I do not have it.",
+			"I have a hunch, but that's all, I'm afraid."
+		],
+
+
+		"NoCallbackBinding": [
+			"Hm, I didn't quite get that - can you be more precise?",
+			"I know this one... give me another try, this time, be more specific and check spelling",
+			"So close... hmm, maybe try retyping your question in a different way?"
+		],
+
+		"NoResponse": [
+			"Not sure about that one",
+			"I was not expecting anything less",
+			"I have no clue",
+			"Try again!",
+			"No idea about that one",
+	    	"No say, José"
+	    ]	
+	},
+
+	"pronoun_identifiers": {
+		
+		"sv-se": {
+			
+			"interrogative": [
+			    "vad", 
+			    "vem",
+	            "hur", 
+	            "varför",
+	            "vilken", 
+	            "vilket",
+	            "hurdan", 
+	            "hurudan",
+	            "undrar", 
+	            "när"
+	        ],
+
+	        "personal": [
+	            "jag", 
+	            "vi",
+	            "du", 
+	            "ni",
+	            "han", 
+	            "hon",
+	            "den", 
+	            "de",
+	            "dem"
+	        ],
+
+	        "possessive": [
+	        	"mitt",
+				"mina",
+				"min", 
+				"vårt",
+				"vår", 
+				"våra",
+				"vårt",
+				"din",
+				"ditt",
+				"dina",
+				"ert", 
+				"er",
+				"era", 
+				"sin",
+				"sitt",
+				"sina"
+	        ]
+	    },
+
+        "en-us": {
+
+        	"interrogative": [
+			    "what", 
+			    "who",
+			    "whom",
+	            "how", 
+	            "why",
+	            "which", 
+	            "wonder", 
+	            "when"
+	        ],
+
+	        "personal": [
+	            "I", 
+	            "i",
+	            "you", 
+	            "he",
+	            "him",
+	            "she",
+	            "her",
+	            "it",
+	            "them", 
+	            "they"
+	        ],
+
+	        "possessive": [
+	        	"mine",
+				"my", 
+				"our",
+				"ours",
+				"your",
+				"yours",
+				"their",
+				"theirs"
+	        ]
+        }
+    }
+}
