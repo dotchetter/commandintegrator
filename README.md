@@ -29,3 +29,67 @@ to hear it if there's actually an update.
 The objects in the apihandle module which make use of the requests library among others, to make it super simple to interact with REST APIs.
 
 These are a few things that make CommandIntegrator what is is. 
+
+
+
+
+
+## CommandIntegrator 1.2.5 update changelog
+
+**New**
+
+* `CommandParser	` Class, ready-to-use. See **example.py** in **/examples** 
+
+  If you only need a default CommandParser without any overloaded methods, this class is for you!
+
+  You no longer need to inherit the FeatureCommandParserBase in order to create a command parser
+
+  for your Feature, just use the `CommandParser` object.
+  
+
+* `Feature` Class, ready-to-use. See **example.py** in **/examples** 
+
+* The `FeatureCommandParserBase` is no longer mandatory to inherit from. You can simply use the `CommandParser` object which is included in the package.
+  
+* The `PronounLookupTable` class is no longer needed. It is present but changed to a **static** type which is accessed by the `CommandProcessor`.
+  
+
+**Improvements**
+
+* `import CommandIntegrator` is now the only needed import to access everything within the package. By the use of the `__init__.py` file. `import CommandIntegrator as ci` will give you access to all classes and functions in the package from the `ci.` syntax
+
+  
+
+* Language data is migrated to a new file called `language.json` which allows developers to easily increase the support for other languages
+  
+
+* Code refactoring including module details, module name scheme according to PEP8
+  
+
+* Pronoun strings removed from `PronounLookupTable` object and moved to `language.json` 
+  
+*  Create log entries manually using:
+   `@ci.logger.log(message, level = "debug"  / "info" / "error")`
+* Set log file location and name in `commandintegrator.settings`
+  
+* Choose whether or not to **append** the log file (**false** evaluates to file overwrite each start)
+  
+* `CommandProcessor` now accepts a single feature without being enclosed in Tuple.
+  
+
+* Reduced processing time of commands
+  
+* Reduced code needed to create a working assistant with command integration
+  
+
+* `logger` function is rewritten as a class
+
+* You can now log manual entries by calling:
+
+   `ci.logger.log(message = "Derp", level = "debug" # "info" # "error")`
+  
+
+* The decoration to use changed from `@logger` to `@ci.logger.loggedmethod`
+
+
+
