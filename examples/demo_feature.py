@@ -45,13 +45,15 @@ class ClockFeature(ci.FeatureBase):
         self.command_parser.callbacks = {'time': self.get_time,
                                         'tiden': self.get_time}
 
+    @ci.logger.loggedmethod
+    def get_time(self):
+        ci.logger.log(message = "This was run by the inherited feature", level = "info")
+        return f'Klockan är {time.strftime("%H:%M")}.'
+
 #  ------------------------------------------------------------
 #  -- DEVELOP FEATURES USING INHERITATION:
 #  ->> EXAMPLE #2 :
 
-class VulcanTranslatorFeatureCommandParser(ci.FeatureCommandParserBase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
 class VulcanTranslatorFeature(ci.FeatureBase):
 
@@ -63,7 +65,7 @@ class VulcanTranslatorFeature(ci.FeatureBase):
 
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
-        self.command_parser = VulcanTranslatorFeatureCommandParser()
+        self.command_parser = ci.CommandParser()
         self.command_parser.keywords = VulcanTranslatorFeature.FEATURE_KEYWORDS
         self.command_parser.callbacks = {
             'translate': self.translate,
@@ -91,40 +93,70 @@ class VulcanTranslatorFeature(ci.FeatureBase):
         return str().join(res['contents']['translated'])
 
 
-#  ------------------------------------------------------------
-#  -- DEVELOP FEATURES USING DEAFULT OBJECTS:
-#  ->> EXAMPLE #1 :
-
-# Interactive methods (will be fed the Message object from front end for processing)
-@ci.logger.loggedmethod
-def echo(message: ci.Message) -> str:
-    return f'You said: {message.content}'
-
-# Normal methods (takes 0 arguments)
-@ci.logger.loggedmethod
-def get_time():
-    ci.logger.log(message = "I logged this manually.", level = "info")
-    return f'Klockan är {time.strftime("%H:%M")}.'
-
-# Instantiate a CommandParser, Feature and assign Keywords and Callbacks
-clock_feature = ci.Feature(name = 'ClockFeature')
-command_parser = ci.CommandParser()
-
-command_parser.keywords = ('klockan', 'time', 'echo') 
-command_parser.callbacks = {'klockan': get_time, 'time': get_time, 'echo': echo}
-command_parser.interactive_methods = (echo,)
-
-clock_feature.command_parser = command_parser
 
 if __name__ == '__main__':
     
+    #  ------------------------------------------------------------
+    #  -- DEVELOP FEATURES USING DEAFULT OBJECTS:
+    #  ->> EXAMPLE #1 :
+    
+    vulcan_api_url = "https://api.funtranslations.com/translate/vulcan.json"
+    vulcan_api_handle = ci.RestApiHandle(vulcan_api_url)
+
+    # Interactive methods (will be fed the Message object from front end for processing)
+    @ci.logger.loggedmethod
+    def translate(message: ci.Message) -> str:
+        """
+        life, is, like, a, box, of, chocolates
+        """
+        message.content = message.content[1:]
+
+        for i in message.content:
+            stripped = i.strip(ci.CommandParser.IGNORED_CHARS)
+
+        msg = str(' ').join(message.content)
+        headers = {'text': msg}
+        res = vulcan_api_handle.post(headers)
+        return str().join(res['contents']['translated'])
+
+    # Normal methods (takes 0 arguments)
+    @ci.logger.loggedmethod
+    def get_time():
+        ci.logger.log(message = "This was run by the non-inherited feature", level = "info")
+        return f'Klockan är {time.strftime("%H:%M")}.'
+    
     msg = ci.Message()
     processor = ci.CommandProcessor()
-    
-    clock_feature = clock_feature
-    vulcan_feature = VulcanTranslatorFeature()
 
-    processor.features = (clock_feature,)
+    # Instantiate features from classes above, that inherited base classes:
+    clock_feature_inherit = ClockFeature()
+    vulcan_feature_inherit = VulcanTranslatorFeature()
+
+    # Instantiate features using default objects (different approach):
+    clock_feature_basic = ci.Feature(name = 'ClockFeature_Basic')
+    vulcan_feature_basic = ci.Feature(name = 'VulcanTranslatorFeature_Basic')
+
+    # The Vulcan feature needs the message to translate it, 
+    # Adding it to the .interactive_methods property to enable
+    # this method to receive the parameter "message".
+    vulcan_feature_basic.interactive_methods = (translate,)
+
+    # Instantiate command parser object for these features:
+    clock_feature_basic.command_parser = ci.CommandParser(
+        keywords = ('klockan', 'time', 'echo'),
+        callbacks = {'klockan': get_time, 'time': get_time}
+    )
+
+    vulcan_feature_basic.command_parser = ci.CommandParser(
+        keywords = ('översätt', 'translate'),
+        callbacks = {'översätt': translate, 'translate': translate}
+    )
+
+
+    # --- Start the virtual assistant ---
+
+    # Assign features to the CommandProcessor.
+    processor.features = (vulcan_feature_basic, clock_feature_basic)
     
     print(f'\n# Running CommandIntegrator version: {ci.VERSION}')
     print('# Features loaded: ', '\n')
