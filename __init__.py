@@ -16,6 +16,7 @@ from .core.decorators import scheduledmethod
 from .core.pronounlookuptable import PronounLookupTable
 from .core.enumerators import CommandPronoun
 from .core.internals import _cim, is_dst
+from .core.callback import Callback
 
 from .models.commandparser import CommandParser
 from .models.feature import Feature
