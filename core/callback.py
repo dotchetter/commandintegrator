@@ -1,11 +1,12 @@
-from ..models import Message
+from itertools import zip_longest
+from ..models.message import Message
 
 """
 Details:
     2020-07-17
     
     CommandIntegrator framework source file with Callback
-    objectsaa
+    objects
 
     This module contains objects that are designed to make
     creating callbacks in Features easier, by offering an
@@ -57,6 +58,24 @@ class Callback:
 
 	def __setitem__(self):
 		pass
+			for lead, trail in zip_longest(match_lead, match_trail):
+				try:
+					_index = message.content.index(lead)
+					if _index> latest_lead_occurence:
+						latest_lead_occurence = _index
+				except ValueError:
+					pass
+				try:
+					_index = message.content.index(trail)
+					if _index> latest_trail_occurence:
+						latest_trail_occurence = _index
+				except ValueError:
+					pass
+			match_trail = (latest_trail_occurence > latest_lead_occurence)
+		
+		if match_lead and match_trail or match_lead and not self._trail:
+			return self._bindings[match_lead.pop()]
+		return None
 
 	@property
 	def lead(self) -> tuple:
