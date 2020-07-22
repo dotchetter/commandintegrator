@@ -155,36 +155,16 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
     def get_callback(self, message: Message) -> 'function':
         """
         Returns the method (function object) bound to a 
-        subcategory in the feature implementation. This method 
+        Callback object, if eligible. This method 
         should be overloaded if a different return behavior 
         in a no-match-found scenario is desired.
         """
 
-        strip_chars = lambda string: string.strip(FeatureCommandParserBase.IGNORED_CHARS)
-        complex_callbacks = []
-        simple_callbacks = []
-        
-        for key in self._callbacks.keys():
-            try:
-                complex_callbacks.append(literal_eval(key))
-            except:
-                simple_callbacks.append(key)
+        message.content = [i.strip(FeatureCommandParserBase.IGNORED_CHARS) for i in message.content]
 
-        for subcategory in complex_callbacks:
-            for word in message.content:
-                word = strip_chars(word)
-                try:
-                    subset = subcategory[word]
-                except KeyError:
-                    pass
-                else:
-                    if [strip_chars(i) for i in message.content if strip_chars(i) in subset]:
-                        return self._callbacks[str(subcategory)]
-    
-        for word in message.content:
-            word = strip_chars(word)
-            if word in simple_callbacks:
-                return self._callbacks[word]
+        for cb in self._callbacks:
+            res = cb[message]
+            if res: return res
         return None
 
     @property
