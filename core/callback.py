@@ -115,21 +115,16 @@ class Callback:
 		return None
 
 	def _assert_ordered(self, message: Message) -> bool:
-		ordered_trail = True
-		ordered_lead = True
-
+		ordered_trail, ordered_lead = True, True
 		for word_a, word_b in zip([i for i in message.content if i in self._lead], self._lead):
 			if word_a != word_b: 
 				ordered_lead = False
 				break
-
 		if not self._trail:	return ordered_lead
-
 		for word_a, word_b in zip([i for i in message.content if i in self._trail], self._trail):
 			if word_a != word_b: 
 				ordered_trail = False
 				break
-
 		return ordered_trail and ordered_lead
 
 	@property
