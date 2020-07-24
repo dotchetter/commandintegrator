@@ -186,9 +186,9 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
         return self._callbacks
     
     @callbacks.setter
-    def callbacks(self, callbacks: dict):
-        if not isinstance(callbacks, dict):
-            raise TypeError(f'{_cim.warn}: callbacks must be dict, got {type(callbacks)}')
+    def callbacks(self, callbacks: tuple):
+        if isinstance(callbacks, Callback):
+            callbacks = (callbacks,)
         self._callbacks = callbacks
 
     @property
