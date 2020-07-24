@@ -50,7 +50,7 @@ class Callback:
 		self.ordered = ordered
 
 	def __repr__(self):
-		pass
+		return f"Callback Object(lead: {self._lead}, trail: {self._trail}, func: {self._func})"
 
 	def __getitem__(self, message: Message) -> callable:
 		"""
