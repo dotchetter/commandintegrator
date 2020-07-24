@@ -182,7 +182,7 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
         self._keywords = keywords
 
     @property
-    def callbacks(self) -> dict:
+    def callbacks(self) -> tuple:
         return self._callbacks
     
     @callbacks.setter
