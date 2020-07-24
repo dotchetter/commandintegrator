@@ -53,6 +53,8 @@ class Callback:
 		return f"Callback Object(lead: {self._lead}, trail: {self._trail}, func: {self._func})"
 
 	def __getitem__(self, message: Message) -> callable:
+		return self.parse(message)
+
 		"""
 		Return the callable bound to the Callback instance
 		if the message matches the subset(s) of strings
@@ -126,6 +128,19 @@ class Callback:
 				ordered_trail = False
 				break
 		return ordered_trail and ordered_lead
+
+	def matches(self, message: Message) -> bool:
+		"""
+		Boolean indicator to whether the callback
+		matches a given message, without returning
+		the function itself as with the .Parse method.
+		
+		:param message:
+			CommandIntegrator.Message
+		:returns:
+			Bool, True if self matches command
+		"""
+		return self.parse(message) is not None
 
 	@property
 	def bindings(self) -> dict:
