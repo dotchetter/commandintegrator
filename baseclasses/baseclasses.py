@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, time
 from enum import Enum, auto
 from abc import ABC, abstractmethod
 
+from ..core.callback import Callback
 from ..core.internals import _cim
 from ..core.enumerators import CommandPronoun
 from ..models.message import Message
