@@ -28,10 +28,6 @@ Module details:
 #  -- DEVELOP FEATURES USING INHERITATION:
 #  ->> EXAMPLE #1:
 
-class ClockFeatureCommandParser(ci.FeatureCommandParserBase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
 class ClockFeature(ci.FeatureBase):
 
     # This Feature enables the assistant system to 
@@ -41,9 +37,11 @@ class ClockFeature(ci.FeatureBase):
         super().__init__(self, *args, **kwargs)        
         self.mapped_pronouns = (ci.CommandPronoun.INTERROGATIVE,)
         self.command_parser = ci.CommandParser()
-        self.command_parser.keywords = ('time', 'clock')
-        self.command_parser.callbacks = {'time': self.get_time,
-                                        'tiden': self.get_time}
+        self.command_parser.keywords = ('what')
+        self.command_parser.callbacks = ci.Callback(
+            lead = ('time', 'tiden'), 
+            trail = ('is', 'it'), func = self.get_time
+        )
 
     @ci.logger.loggedmethod
     def get_time(self):
@@ -67,15 +65,13 @@ class VulcanTranslatorFeature(ci.FeatureBase):
         super().__init__(self, *args, **kwargs)
         self.command_parser = ci.CommandParser()
         self.command_parser.keywords = VulcanTranslatorFeature.FEATURE_KEYWORDS
-        self.command_parser.callbacks = {
-            'translate': self.translate,
-            'översätt': self.translate,
-            'översätta': self.translate
-        }
-
-        self.command_parser.interactive_methods = (self.translate,)
+        self.command_parser.callbacks = ci.Callback(
+            lead = ('översätt', 'översätta', 'translate'), 
+            func = self.translate,
+            interactive = True
+        )
         self.apihandle = ci.RestApiHandle("https://api.funtranslations.com/translate/vulcan.json")
-
+    
     @ci.logger.loggedmethod
     def translate(self, message: ci.Message) -> str:
         """
@@ -110,6 +106,7 @@ if __name__ == '__main__':
         life, is, like, a, box, of, chocolates
         """
         message.content = message.content[1:]
+        print(message.content)
 
         for i in message.content:
             stripped = i.strip(ci.CommandParser.IGNORED_CHARS)
@@ -136,20 +133,15 @@ if __name__ == '__main__':
     clock_feature_basic = ci.Feature(name = 'ClockFeature_Basic')
     vulcan_feature_basic = ci.Feature(name = 'VulcanTranslatorFeature_Basic')
 
-    # The Vulcan feature needs the message to translate it, 
-    # Adding it to the .interactive_methods property to enable
-    # this method to receive the parameter "message".
-    vulcan_feature_basic.interactive_methods = (translate,)
-
     # Instantiate command parser object for these features:
     clock_feature_basic.command_parser = ci.CommandParser(
         keywords = ('klockan', 'time', 'echo'),
-        callbacks = {'klockan': get_time, 'time': get_time}
+        callbacks = ci.Callback('klockan', get_time)
     )
 
     vulcan_feature_basic.command_parser = ci.CommandParser(
         keywords = ('översätt', 'translate'),
-        callbacks = {'översätt': translate, 'translate': translate}
+        callbacks = ci.Callback('översätt', translate, interactive = True)
     )
 
 
