@@ -208,14 +208,9 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
     
     @interactive_methods.setter
     def interactive_methods(self, arg: tuple):
-        if not isinstance(arg, tuple):
-            raise TypeError(f'{_cim.warn}: interactive methods must be enclosed in tuple, got {type(arg)}')
-        for i in arg:
-            if not callable(i):
-                raise TypeError(f'{_cim.warn}: interactive method not callable: {i}')
-            elif isinstance(i, LambdaType):
-                sys.stderr.write(f'{_cim.warn}: interactive method wrapped in lambda: {i.__module__}')
-        self._interactive_methods = arg
+        sys.stdout.write(
+            f"{_cim.deprecated_warn}: interactive methods are automated in CI 1.2.6 and needs no assignment"
+        )
 
 
 class FeatureABC(ABC):
