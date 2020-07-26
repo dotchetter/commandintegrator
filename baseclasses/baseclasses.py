@@ -190,6 +190,12 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
     def callbacks(self, callbacks: tuple):
         if isinstance(callbacks, Callback):
             callbacks = (callbacks,)
+        try:
+            for cb in callbacks:
+                if isinstance(callbacks, dict):
+                    raise AttributeError(f'{_cim.deprecated_warn}: callbacks must be of type Callback since CI v1.2.6.')
+        except TypeError:
+            pass
         self._callbacks = callbacks
 
     @property
