@@ -174,11 +174,12 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
     
     @keywords.setter
     def keywords(self, keywords: tuple):
-        if not isinstance(keywords, tuple):
-            raise TypeError(f'{_cim.warn}: keywords must be tuple, got {type(keywords)}')
-        for i in keywords:
-            if not isinstance(i, str):
-                raise TypeError(f'{_cim.warn}: keyword "{i}" must be str, got {type(i)}')
+        if isinstance(keywords, str):
+            keywords = (keywords,)
+        else:
+            for i in keywords:
+                if not isinstance(i, str):
+                    raise TypeError(f'{_cim.warn}: keyword "{i}" must be str, got {type(i)}')
         self._keywords = keywords
 
     @property
