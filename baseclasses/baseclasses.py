@@ -285,7 +285,11 @@ class FeatureBase(FeatureABC):
 
     def __call__(self, message: Message) -> callable:
         callback = self._command_parser.get_callback(message)
-        return lambda m = message: callback.func(m) if callback.param_passthrough else callback.func
+        if callback:
+            if callback.interactive:
+                return lambda m = message: callback.func(m)
+            return callback.func
+        return None
 
     def __repr__(self):
         if self._name:
