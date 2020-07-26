@@ -130,6 +130,7 @@ def scheduledmethod(func):
     the function output is under the 'result' key, and the
     channel is under the 'channel' key, as seen below.
     """
+    @functools.wraps(func)
     def scheduled_method_wrapper(*args, **kwargs):
         try:
             channel = kwargs['channel']

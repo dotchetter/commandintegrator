@@ -85,11 +85,11 @@ class CommandProcessor:
         self._features collection. As an instance of Interpretation
         is returned from this call, it is passed on to the caller.
         """
-        message.content = message.content.lower().split(' ')
+        message.content = message.content.split()
         try:
             return self._interpret(message)
         except Exception as e:
-            sys.stderr.write(f'{_cim.err} :Error occured in CommandProcessor _interpret function: {e}')
+            sys.stderr.write(f'{_cim.err}: Error occured in CommandProcessor _interpret function: {e}')
             return Interpretation(error = traceback.format_exc(),
                         response = lambda: f'CommandProcessor: Internal error, see logs.',
                         original_message = tuple(message.content))
@@ -104,13 +104,9 @@ class CommandProcessor:
         message for further processing and ultimately returning
         the response.
         """
-        mapped_features = list()
         return_callable = None
         found_pronouns = PronounLookupTable.lookup(message.content)
-        
-        for feature in self._features:
-            if feature.command_parser.is_contender_for_processing(message): 
-                mapped_features.append(feature)
+        mapped_features = [i for i in self._features if i.command_parser.is_contender_for_processing(message)]
 
         if not mapped_features:
             return Interpretation(
@@ -120,23 +116,15 @@ class CommandProcessor:
                 response = lambda: random.choice(CommandProcessor.DEFAULT_RESPONSES['NoResponse']))
 
         for feature in mapped_features:
-            try:
-                return_callable = feature(message)
-            except NotImplementedError as e:
-                return Interpretation(
-                    command_pronouns = found_pronouns,
-                    feature_name = feature.__class__.__name__,
-                    response = lambda: random.choice(CommandProcessor.DEFAULT_RESPONSES['NoImplementation']),
-                    original_message = tuple(message.content),
-                    error = e)
-            else:
-                if return_callable is None:
-                    continue
-                return Interpretation(
-                    command_pronouns = found_pronouns,
-                    feature_name = feature.__class__.__name__,
-                    response = return_callable,
-                    original_message = tuple(message.content))
+            return_callable = feature(message)
+
+            if return_callable is None:
+                continue
+            return Interpretation(
+                command_pronouns = found_pronouns,
+                feature_name = feature.__class__.__name__,
+                response = return_callable,
+                original_message = tuple(message.content))
 
         return Interpretation(command_pronouns = found_pronouns,
             feature_name = feature.__class__.__name__,

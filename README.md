@@ -1,40 +1,83 @@
 # CommandIntegrator
 
-CommandIntegrator is a lightweight framework for creating applications with Features that use commands in human languages, to bind them with certain methods, by creating a streamlined development structure with automated command parsing, logging, and more. 
+## What it does
+CommandIntegrator is a lightweight framework and API for creating apps controlled with commands.
+It concists of base classes and ready-to-use objects along with a set and clear structure for how to develop and scale a chat bot / Virtual assistant. 
+
+Objects such as the `Feature`, which can be thought of a micro service within your app, makes it easier to keep the OOP structure clean and well maintained. Automatic command parsing with the `CommandParser` and `CommandProcessor` makes it very  straight forward to build and scale your command-controlled application without having to worry about name and word collisions, edge-case actions etcetera.
 
 
-## Explain?
-
-CommandIntegrator includes both base classes to inherit from when creating "Features", which are classes that represent the interface of a certain feature that the application may have.
-For example, if you build a virtual assistant that can tell you what time it is by asking it - that's a feature. Another one might be, telling you the weather forecast 
-upon request.
-Base classes for these purposes with pre-defined methods that automate the command parsing - that is, understanding the command and directing it to the correct
-Feature and method in said feature. 
-
-Aside from the framework itself for developing Feautres, the processing of the command is also automated by the CommandProcessor object. 
-Simply pass instances of your Feature classes to this object on instantiation and pass your command to the CommandProcessor instance. 
 
 ## Objects and wrappers for more effective and easier development
-Isn't t a hassle to implement a stupid simple, pragmatic yet bullet proof logging system for your project? 
-If you're many developers on the same project, making sure that you all participate in a unified and clear
-logging fashion without overwriting one another can be tricky. 
 
-The logger wrapper in CommandIntegrator makes it incredibly easy to implement logging to your tech stack.
-Simply import logger from CommandIntegrator, add @logger above the method declaration and have automated logging. Enjoy.
-
-Things such as PollCache for acting as a Buffer between caller and responder, where output is only recieved if there's an update
-in the response body, which is useful when asking an API or a website multiple times per hour, minute or second - but you only want
-to hear it if there's actually an update.
-
-The objects in the apihandle module which make use of the requests library among others, to make it super simple to interact with REST APIs.
-
-These are a few things that make CommandIntegrator what is is. 
+CommandIntegrator comes with objects to make development easier.  Decorator wrappers for automated logging, scheduling of function execution, caching objects and API DAO's are a few that are included in the package.
 
 
 
+## Example
+
+Here's a short example of how to create a virtual assistant that tells you what time it is.
+For a more comprehensive example, please read the `demo_feature.py` file in /examples, or 
+refer to the Wiki.
+
+```python
+import CommandIntegrator as ci
+import time
+
+class ClockFeature(ci.FeatureBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+        self.command_parser = ci.CommandParser()
+
+        # Defines which keywords that this Feature identifies with initially
+        self.command_parser.keywords = ('what')
+
+        # The Callback object is a more intricate and well defined way of 
+        # binding a sentence / sequence of words to a function. 
+        self.command_parser.callbacks = ci.Callback(lead = 'time', trail = ('is', 'it'), func = self.get_time)
+
+    @ci.logger.loggedmethod
+    def get_time(self):
+        ci.logger.log(message = "Manual log entry here", level = "info")
+        return f'The time is {time.strftime("%H:%M")}.'
+```
 
 
-## CommandIntegrator 1.2.5 update changelog
+
+## Changelog
+
+
+
+#### CommandIntegrator version 1.2.6
+
+​	
+
+This patch contains news and improvements.
+
+**Important**: Features without `Callback` as the object in `callbacks `for `CommandParser` objects will not work, and need to be upgraded to `Callback`.
+
+
+
+**New**
+
+*  `Callback`  
+  The `Callback` object has replaced the old structure with dictionaries when creating a callback binding with words to a method in Features. See `demo_feature` in `examples.py` for a demo of how to get started and upgrading your features.
+* Compliance in *FeatureBase*, *CommandParserBase* and *CommandProcessor for use with `Callback`
+  
+  
+
+**Improvements**
+
+* Fixes an issue where no warning was delivered upon trying to use **int** as key in callbacks. This is still not supported but is now explained through an error.
+* Fixes an issue with Features receiving the lowered version of the command only. Features still match case insensitive but now receive the original message.
+
+
+
+
+
+
+
+#### CommandIntegrator 1.2.5 update
 
 **New**
 
@@ -46,7 +89,6 @@ These are a few things that make CommandIntegrator what is is.
 
   for your Feature, just use the `CommandParser` object.
   
-
 * `Feature` Class, ready-to-use. See **example.py** in **/examples** 
 
 * The `FeatureCommandParserBase` is no longer mandatory to inherit from. You can simply use the `CommandParser` object which is included in the package.
@@ -62,10 +104,8 @@ These are a few things that make CommandIntegrator what is is.
 
 * Language data is migrated to a new file called `language.json` which allows developers to easily increase the support for other languages
   
-
 * Code refactoring including module details, module name scheme according to PEP8
   
-
 * Pronoun strings removed from `PronounLookupTable` object and moved to `language.json` 
   
 *  Create log entries manually using:
@@ -76,20 +116,15 @@ These are a few things that make CommandIntegrator what is is.
   
 * `CommandProcessor` now accepts a single feature without being enclosed in Tuple.
   
-
 * Reduced processing time of commands
   
 * Reduced code needed to create a working assistant with command integration
   
-
 * `logger` function is rewritten as a class
 
 * You can now log manual entries by calling:
 
    `ci.logger.log(message = "Derp", level = "debug" # "info" # "error")`
-  
+
 
 * The decoration to use changed from `@logger` to `@ci.logger.loggedmethod`
-
-
-

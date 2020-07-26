@@ -67,8 +67,7 @@ class VulcanTranslatorFeature(ci.FeatureBase):
         self.command_parser.keywords = VulcanTranslatorFeature.FEATURE_KEYWORDS
         self.command_parser.callbacks = ci.Callback(
             lead = ('översätt', 'översätta', 'translate'), 
-            func = self.translate,
-            interactive = True
+            func = self.translate
         )
         self.apihandle = ci.RestApiHandle("https://api.funtranslations.com/translate/vulcan.json")
     

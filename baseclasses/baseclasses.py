@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, time
 from enum import Enum, auto
 from abc import ABC, abstractmethod
 
+from ..core.callback import Callback
 from ..core.internals import _cim
 from ..core.enumerators import CommandPronoun
 from ..models.message import Message
@@ -148,43 +149,21 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
             message.content = [word.replace(key, self._ignored_chars[key]) for word in message.content]
 
         for word in message.content:
-            if word.strip(FeatureCommandParserBase.IGNORED_CHARS) in self:
+            if word.lower().strip(FeatureCommandParserBase.IGNORED_CHARS) in self:
                 return True
         return False
     
-    def get_callback(self, message: Message) -> 'function':
+    def get_callback(self, message: Message) -> Callback:
         """
         Returns the method (function object) bound to a 
-        subcategory in the feature implementation. This method 
+        Callback object, if eligible. This method 
         should be overloaded if a different return behavior 
         in a no-match-found scenario is desired.
         """
-
-        strip_chars = lambda string: string.strip(FeatureCommandParserBase.IGNORED_CHARS)
-        complex_callbacks = []
-        simple_callbacks = []
-        
-        for key in self._callbacks.keys():
-            try:
-                complex_callbacks.append(literal_eval(key))
-            except:
-                simple_callbacks.append(key)
-
-        for subcategory in complex_callbacks:
-            for word in message.content:
-                word = strip_chars(word)
-                try:
-                    subset = subcategory[word]
-                except KeyError:
-                    pass
-                else:
-                    if [strip_chars(i) for i in message.content if strip_chars(i) in subset]:
-                        return self._callbacks[str(subcategory)]
-    
-        for word in message.content:
-            word = strip_chars(word)
-            if word in simple_callbacks:
-                return self._callbacks[word]
+        message.content = [i.strip(FeatureCommandParserBase.IGNORED_CHARS) for i in message.content]
+        for cb in self._callbacks:
+            match = cb.matches(message)
+            if match: return cb
         return None
 
     @property
@@ -193,21 +172,28 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
     
     @keywords.setter
     def keywords(self, keywords: tuple):
-        if not isinstance(keywords, tuple):
-            raise TypeError(f'{_cim.warn}: keywords must be tuple, got {type(keywords)}')
-        for i in keywords:
-            if not isinstance(i, str):
-                raise TypeError(f'{_cim.warn}: keyword "{i}" must be str, got {type(i)}')
+        if isinstance(keywords, str):
+            keywords = (keywords,)
+        else:
+            for i in keywords:
+                if not isinstance(i, str):
+                    raise TypeError(f'{_cim.warn}: keyword "{i}" must be str, got {type(i)}')
         self._keywords = keywords
 
     @property
-    def callbacks(self) -> dict:
+    def callbacks(self) -> tuple:
         return self._callbacks
     
     @callbacks.setter
-    def callbacks(self, callbacks: dict):
-        if not isinstance(callbacks, dict):
-            raise TypeError(f'{_cim.warn}: callbacks must be dict, got {type(callbacks)}')
+    def callbacks(self, callbacks: tuple):
+        if isinstance(callbacks, Callback):
+            callbacks = (callbacks,)
+        try:
+            for cb in callbacks:
+                if isinstance(callbacks, dict):
+                    raise AttributeError(f'{_cim.deprecated_warn}: callbacks must be of type Callback since CI v1.2.6.')
+        except TypeError:
+            pass
         self._callbacks = callbacks
 
     @property
@@ -226,14 +212,9 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
     
     @interactive_methods.setter
     def interactive_methods(self, arg: tuple):
-        if not isinstance(arg, tuple):
-            raise TypeError(f'{_cim.warn}: interactive methods must be enclosed in tuple, got {type(arg)}')
-        for i in arg:
-            if not callable(i):
-                raise TypeError(f'{_cim.warn}: interactive method not callable: {i}')
-            elif isinstance(i, LambdaType):
-                sys.stderr.write(f'{_cim.warn}: interactive method wrapped in lambda: {i.__module__}')
-        self._interactive_methods = arg
+        sys.stdout.write(
+            f"{_cim.deprecated_warn}: interactive methods are automated in CI 1.2.6 and needs no assignment"
+        )
 
 
 class FeatureABC(ABC):
@@ -303,17 +284,12 @@ class FeatureBase(FeatureABC):
         super().__init__(*args, **kwargs)
 
     def __call__(self, message: Message) -> callable:
-        try:
-            feature_function = self._command_parser.get_callback(message)
-            if feature_function is None:
-                return None
-
-            if feature_function in self._command_parser.interactive_methods:
-                return lambda message = message: feature_function(message)
-        except KeyError:
-            raise NotImplementedError(f'{_cim.warn}: no mapped function call for {feature_function} in self')
-
-        return feature_function
+        callback = self._command_parser.get_callback(message)
+        if callback:
+            if callback.interactive:
+                return lambda m = message: callback.func(m)
+            return callback.func
+        return None
 
     def __repr__(self):
         if self._name:
