@@ -40,9 +40,11 @@ class Callback:
 	"""
 
 	__slots__ = ('_lead', '_trail', '_func', '_bindings', 
-				 '_ordered', '_intact_lead', '_intact_trail')
+				 '_param_passthrough', '_ordered', '_intact_lead', 
+				 '_intact_trail')
 
-	def __init__(self, lead, func, trail = None, ordered = False):
+	def __init__(self, lead, func, trail = None, ordered = False, param_passthrough = False):
+		self.param_passthrough = param_passthrough
 		self.bindings = dict()
 		self.func = func
 		self.lead = lead
@@ -50,10 +52,17 @@ class Callback:
 		self.ordered = ordered
 
 	def __repr__(self):
-		pass
+		return f"Callback Object(lead: {self._lead}, trail: {self._trail}, func: {self._func})"
 
 	def __getitem__(self, message: Message) -> callable:
+		return self.parse(message)
+
+	def matches(self, message: Message) -> bool:
 		"""
+		Boolean indicator to whether the callback
+		matches a given message, without returning
+		the function itself as with the .Parse method.
+		
 		Return the callable bound to the Callback instance
 		if the message matches the subset(s) of strings
 		defined in this object.
@@ -77,10 +86,11 @@ class Callback:
 		loop continues and will eventually exhaust. 
 		If not, the trail condition is not met and method 
 		exits with False.
+
 		:param message:
 			CommandIntegrator.Message
 		:returns:
-			callable or None
+			Bool, True if self matches command
 		"""
 		match_trail = False
 
@@ -98,7 +108,7 @@ class Callback:
 			for lead, trail in zip_longest(match_lead, match_trail):
 				try:
 					_index = message.content.index(lead)
-					if _index> latest_lead_occurence:
+					if _index > latest_lead_occurence:
 						latest_lead_occurence = _index
 				except ValueError:
 					pass
@@ -109,10 +119,7 @@ class Callback:
 				except ValueError:
 					pass
 			match_trail = (latest_trail_occurence > latest_lead_occurence)
-		
-		if match_lead and match_trail or match_lead and not self._trail:
-			return self._bindings[match_lead.pop()]
-		return None
+		return match_lead and match_trail or match_lead and not self._trail
 
 	def _assert_ordered(self, message: Message) -> bool:
 		ordered_trail, ordered_lead = True, True
@@ -170,6 +177,14 @@ class Callback:
 		if not callable(func):
 			raise AttributeError(f"{func} cannot be used as func parameter as it is not callable")
 		self._func = func
+
+	@property
+	def param_passthrough(self) -> bool:
+		return self._param_passthrough
+	
+	@param_passthrough.setter
+	def param_passthrough(self, param_passthrough: bool):
+		self._param_passthrough = param_passthrough
 
 	@property
 	def ordered(self) -> bool:
