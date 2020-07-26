@@ -23,6 +23,7 @@ refer to the Wiki.
 ```python
 import CommandIntegrator as ci
 import time
+from pprint import pprint
 
 class ClockFeature(ci.FeatureBase):
     def __init__(self, *args, **kwargs):
@@ -40,6 +41,21 @@ class ClockFeature(ci.FeatureBase):
     def get_time(self):
         ci.logger.log(message = "Manual log entry here", level = "info")
         return f'The time is {time.strftime("%H:%M")}.'
+    
+    
+    
+if __name__ == '__main__':
+    processor = ci.CommandProcessor()
+    processor.features = (ClockFeature(),)
+    msg = ci.Message()
+    
+    while True:
+        msg.content = input("-> ")
+        response = processor.process(msg)
+        
+        print("\n-> Response received:\n")
+        pprint(f"\t{response.__dict__}")
+        print("\n-> Bot said: ", response.response(), "\n")
 ```
 
 
