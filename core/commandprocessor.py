@@ -116,23 +116,15 @@ class CommandProcessor:
                 response = lambda: random.choice(CommandProcessor.DEFAULT_RESPONSES['NoResponse']))
 
         for feature in mapped_features:
-            try:
-                return_callable = feature(message)
-            except NotImplementedError as e:
-                return Interpretation(
-                    command_pronouns = found_pronouns,
-                    feature_name = feature.__class__.__name__,
-                    response = lambda: random.choice(CommandProcessor.DEFAULT_RESPONSES['NoImplementation']),
-                    original_message = tuple(message.content),
-                    error = e)
-            else:
-                if return_callable is None:
-                    continue
-                return Interpretation(
-                    command_pronouns = found_pronouns,
-                    feature_name = feature.__class__.__name__,
-                    response = return_callable,
-                    original_message = tuple(message.content))
+            return_callable = feature(message)
+
+            if return_callable is None:
+                continue
+            return Interpretation(
+                command_pronouns = found_pronouns,
+                feature_name = feature.__class__.__name__,
+                response = return_callable,
+                original_message = tuple(message.content))
 
         return Interpretation(command_pronouns = found_pronouns,
             feature_name = feature.__class__.__name__,
