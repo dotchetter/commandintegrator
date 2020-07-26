@@ -40,9 +40,11 @@ class Callback:
 	"""
 
 	__slots__ = ('_lead', '_trail', '_func', '_bindings', 
-				 '_ordered', '_intact_lead', '_intact_trail')
+				 '_param_passthrough', '_ordered', '_intact_lead', 
+				 '_intact_trail')
 
-	def __init__(self, lead, func, trail = None, ordered = False):
+	def __init__(self, lead, func, trail = None, ordered = False, param_passthrough = False):
+		self.param_passthrough = param_passthrough
 		self.bindings = dict()
 		self.func = func
 		self.lead = lead
