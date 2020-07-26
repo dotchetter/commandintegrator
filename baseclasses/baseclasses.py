@@ -153,7 +153,7 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
                 return True
         return False
     
-    def get_callback(self, message: Message) -> 'function':
+    def get_callback(self, message: Message) -> Callback:
         """
         Returns the method (function object) bound to a 
         Callback object, if eligible. This method 
