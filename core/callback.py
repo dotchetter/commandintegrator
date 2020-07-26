@@ -145,8 +145,11 @@ class Callback:
 	
 	@lead.setter
 	def lead(self, lead: tuple):
-		if isinstance(lead, str): lead = (lead,)		
-		for i in lead: self._bindings[i] = self._func
+		if isinstance(lead, str): lead = (lead,)
+		try:
+			for i in lead: self._bindings[i] = self._func
+		except TypeError:
+			raise AttributeError("Callback: items in 'lead' and 'trail' must be str")
 		self._lead = lead
 
 	@property
@@ -161,8 +164,10 @@ class Callback:
 		if isinstance(trail, str): trail = (trail,)
 		if (collision := [i for i in self._lead if i in trail]):
 			raise AttributeError(f"trail illogical - reoccuring string from lead: '{collision.pop()}'")
-		
-		for i in trail:	self._bindings[i] = self._func
+		try:
+			for i in trail:	self._bindings[i] = self._func
+		except TypeError:
+			raise AttributeError("Callback: items in 'lead' and 'trail' must be str")
 		self._trail = trail
 
 	@property
