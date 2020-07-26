@@ -280,17 +280,8 @@ class FeatureBase(FeatureABC):
         super().__init__(*args, **kwargs)
 
     def __call__(self, message: Message) -> callable:
-        try:
-            feature_function = self._command_parser.get_callback(message)
-            if feature_function is None:
-                return None
-
-            if feature_function in self._command_parser.interactive_methods:
-                return lambda message = message: feature_function(message)
-        except KeyError:
-            raise NotImplementedError(f'{_cim.warn}: no mapped function call for {feature_function} in self')
-
-        return feature_function
+        callback = self._command_parser.get_callback(message)
+        return lambda m = message: callback.func(m) if callback.param_passthrough else callback.func
 
     def __repr__(self):
         if self._name:
