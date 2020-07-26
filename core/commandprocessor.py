@@ -104,13 +104,9 @@ class CommandProcessor:
         message for further processing and ultimately returning
         the response.
         """
-        mapped_features = list()
         return_callable = None
         found_pronouns = PronounLookupTable.lookup(message.content)
-        
-        for feature in self._features:
-            if feature.command_parser.is_contender_for_processing(message): 
-                mapped_features.append(feature)
+        mapped_features = [i for i in self._features if i.command_parser.is_contender_for_processing(message)]
 
         if not mapped_features:
             return Interpretation(
