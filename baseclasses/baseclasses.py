@@ -164,8 +164,8 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
         message.content = [i.strip(FeatureCommandParserBase.IGNORED_CHARS) for i in message.content]
 
         for cb in self._callbacks:
-            res = cb[message]
-            if res: return res
+            match = cb.matches(message)
+            if match: return cb
         return None
 
     @property
