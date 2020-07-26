@@ -54,9 +54,6 @@ class Callback:
 	def __repr__(self):
 		return f"Callback Object(lead: {self._lead}, trail: {self._trail}, func: {self._func})"
 
-	def __getitem__(self, message: Message) -> callable:
-		return self.parse(message)
-
 	def matches(self, message: Message) -> bool:
 		"""
 		Boolean indicator to whether the callback
