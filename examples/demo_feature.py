@@ -41,9 +41,11 @@ class ClockFeature(ci.FeatureBase):
         super().__init__(self, *args, **kwargs)        
         self.mapped_pronouns = (ci.CommandPronoun.INTERROGATIVE,)
         self.command_parser = ci.CommandParser()
-        self.command_parser.keywords = ('time', 'clock')
-        self.command_parser.callbacks = {'time': self.get_time,
-                                        'tiden': self.get_time}
+        self.command_parser.keywords = ('what')
+        self.command_parser.callbacks = ci.Callback(
+            lead = ('time', 'tiden'), 
+            trail = ('is', 'it'), func = self.get_time
+        )
 
     @ci.logger.loggedmethod
     def get_time(self):
@@ -67,15 +69,12 @@ class VulcanTranslatorFeature(ci.FeatureBase):
         super().__init__(self, *args, **kwargs)
         self.command_parser = ci.CommandParser()
         self.command_parser.keywords = VulcanTranslatorFeature.FEATURE_KEYWORDS
-        self.command_parser.callbacks = {
-            'translate': self.translate,
-            'översätt': self.translate,
-            'översätta': self.translate
-        }
-
-        self.command_parser.interactive_methods = (self.translate,)
+        self.command_parser.callbacks = ci.Callback(
+            lead = ('översätt', 'översätta', 'translate'), 
+            func = self.translate
+        )
         self.apihandle = ci.RestApiHandle("https://api.funtranslations.com/translate/vulcan.json")
-
+    
     @ci.logger.loggedmethod
     def translate(self, message: ci.Message) -> str:
         """
