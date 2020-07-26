@@ -160,9 +160,7 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
         should be overloaded if a different return behavior 
         in a no-match-found scenario is desired.
         """
-
         message.content = [i.strip(FeatureCommandParserBase.IGNORED_CHARS) for i in message.content]
-
         for cb in self._callbacks:
             match = cb.matches(message)
             if match: return cb
