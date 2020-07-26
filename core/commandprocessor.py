@@ -89,7 +89,7 @@ class CommandProcessor:
         try:
             return self._interpret(message)
         except Exception as e:
-            sys.stderr.write(f'{_cim.err} :Error occured in CommandProcessor _interpret function: {e}')
+            sys.stderr.write(f'{_cim.err}: Error occured in CommandProcessor _interpret function: {e}')
             return Interpretation(error = traceback.format_exc(),
                         response = lambda: f'CommandProcessor: Internal error, see logs.',
                         original_message = tuple(message.content))
