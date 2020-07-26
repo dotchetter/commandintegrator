@@ -85,7 +85,7 @@ class CommandProcessor:
         self._features collection. As an instance of Interpretation
         is returned from this call, it is passed on to the caller.
         """
-        message.content = message.content.lower().split(' ')
+        message.content = message.content.split()
         try:
             return self._interpret(message)
         except Exception as e:

@@ -90,27 +90,28 @@ class Callback:
 			Bool, True if self matches command
 		"""
 		match_trail = False
+		lowered = [i.lower() for i in message.content]
 
-		if not (match_lead := [i for i in self._lead if i in message.content]):
+		if not (match_lead := [i for i in self._lead if i in lowered]):
 			return None
-		elif self._ordered and not self._assert_ordered(message):
+		elif self._ordered and not self._assert_ordered(lowered):
 			return None
 
 		if self._trail:
 			latest_lead_occurence, latest_trail_occurence = 0, 0
 
-			if not (match_trail := [i for i in self._trail if i in message.content]):
+			if not (match_trail := [i for i in self._trail if i in lowered]):
 				return None
 
 			for lead, trail in zip_longest(match_lead, match_trail):
 				try:
-					_index = message.content.index(lead)
+					_index = lowered.index(lead)
 					if _index > latest_lead_occurence:
 						latest_lead_occurence = _index
 				except ValueError:
 					pass
 				try:
-					_index = message.content.index(trail)
+					_index = lowered.index(trail)
 					if _index> latest_trail_occurence:
 						latest_trail_occurence = _index
 				except ValueError:
@@ -118,14 +119,14 @@ class Callback:
 			match_trail = (latest_trail_occurence > latest_lead_occurence)
 		return match_lead and match_trail or match_lead and not self._trail
 
-	def _assert_ordered(self, message: Message) -> bool:
+	def _assert_ordered(self, message: list) -> bool:
 		ordered_trail, ordered_lead = True, True
-		for word_a, word_b in zip([i for i in message.content if i in self._lead], self._lead):
+		for word_a, word_b in zip([i for i in message if i in self._lead], self._lead):
 			if word_a != word_b: 
 				ordered_lead = False
 				break
 		if not self._trail:	return ordered_lead
-		for word_a, word_b in zip([i for i in message.content if i in self._trail], self._trail):
+		for word_a, word_b in zip([i for i in message if i in self._trail], self._trail):
 			if word_a != word_b: 
 				ordered_trail = False
 				break
@@ -147,7 +148,7 @@ class Callback:
 	def lead(self, lead: tuple):
 		if isinstance(lead, str): lead = (lead,)
 		try:
-			for i in lead: self._bindings[i] = self._func
+			for i in lead: self._bindings[i.lower()] = self._func
 		except TypeError:
 			raise AttributeError("Callback: items in 'lead' and 'trail' must be str")
 		self._lead = lead
@@ -162,10 +163,10 @@ class Callback:
 			self._trail = None
 			return
 		if isinstance(trail, str): trail = (trail,)
-		if (collision := [i for i in self._lead if i in trail]):
+		if (collision := [i.lower() for i in self._lead if i in trail]):
 			raise AttributeError(f"trail illogical - reoccuring string from lead: '{collision.pop()}'")
 		try:
-			for i in trail:	self._bindings[i] = self._func
+			for i in trail:	self._bindings[i.lower()] = self._func
 		except TypeError:
 			raise AttributeError("Callback: items in 'lead' and 'trail' must be str")
 		self._trail = trail

@@ -149,7 +149,7 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
             message.content = [word.replace(key, self._ignored_chars[key]) for word in message.content]
 
         for word in message.content:
-            if word.strip(FeatureCommandParserBase.IGNORED_CHARS) in self:
+            if word.lower().strip(FeatureCommandParserBase.IGNORED_CHARS) in self:
                 return True
         return False
     
