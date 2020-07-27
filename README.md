@@ -73,21 +73,18 @@ This patch contains news and improvements.
 **Important**: Features without `Callback` as the object in `callbacks `for `CommandParser` objects will not work, and need to be upgraded to `Callback`.
 
 
-
 **New**
 
 *  `Callback`  
   The `Callback` object has replaced the old structure with dictionaries when creating a callback binding with words to a method in Features. See `demo_feature` in `examples.py` for a demo of how to get started and upgrading your features.
 * Compliance in *FeatureBase*, *CommandParserBase* and *CommandProcessor for use with `Callback`
-  
+* The **interactive_methods** tuple property for CommandParser objects is deprecated, and replacedb by the **interactive** flag for the **Callback** object.
   
 
 **Improvements**
 
 * Fixes an issue where no warning was delivered upon trying to use **int** as key in callbacks. This is still not supported but is now explained through an error.
 * Fixes an issue with Features receiving the lowered version of the command only. Features still match case insensitive but now receive the original message.
-
-
 
 
 
