@@ -1,7 +1,7 @@
 # CommandIntegrator
 
 ## What it does
-CommandIntegrator is a lightweight framework and API for creating apps controlled with commands.
+CommandIntegrator is a lightweight framework and API for creating apps controlled with human language interfaces.
 It concists of base classes and ready-to-use objects along with a set and clear structure for how to develop and scale a chat bot / Virtual assistant. 
 
 Objects such as the `Feature`, which can be thought of a micro service within your app, makes it easier to keep the OOP structure clean and well maintained. Automatic command parsing with the `CommandParser` and `CommandProcessor` makes it very  straight forward to build and scale your command-controlled application without having to worry about name and word collisions, edge-case actions etcetera.
@@ -10,15 +10,15 @@ Objects such as the `Feature`, which can be thought of a micro service within yo
 
 ## Objects and wrappers for more effective and easier development
 
-CommandIntegrator comes with objects to make development easier.  Decorator wrappers for automated logging, scheduling of function execution, caching objects and API DAO's are a few that are included in the package.
+CommandIntegrator exists for one reason: To make development of language-driven apps easier.  Decorator wrappers for automated logging, scheduling of function execution, caching objects and API DAO's are a few that are included in the package.
 
+You can build the backend of your virtual assistant / chatbot with the tools and structures of CommandIntegrator and use it in your chatbot for whichever platform you want to use. CommandIntegrator is platform independent and can be used even with a simple command-line app as demonstrated below.
 
 
 ## Example
 
 Here's a short example of how to create a virtual assistant that tells you what time it is.
-For a more comprehensive example, please read the `demo_feature.py` file in /examples, or 
-refer to the Wiki.
+For a more comprehensive example, please read the `demo_feature.py` file [here](https://github.com/dotchetter/CommandIntegrator/blob/master/examples/demo_feature.py)
 
 ```python
 import CommandIntegrator as ci
@@ -73,21 +73,18 @@ This patch contains news and improvements.
 **Important**: Features without `Callback` as the object in `callbacks `for `CommandParser` objects will not work, and need to be upgraded to `Callback`.
 
 
-
 **New**
 
 *  `Callback`  
   The `Callback` object has replaced the old structure with dictionaries when creating a callback binding with words to a method in Features. See `demo_feature` in `examples.py` for a demo of how to get started and upgrading your features.
 * Compliance in *FeatureBase*, *CommandParserBase* and *CommandProcessor for use with `Callback`
-  
+* The **interactive_methods** tuple property for CommandParser objects is deprecated, and replacedb by the **interactive** flag for the **Callback** object.
   
 
 **Improvements**
 
 * Fixes an issue where no warning was delivered upon trying to use **int** as key in callbacks. This is still not supported but is now explained through an error.
 * Fixes an issue with Features receiving the lowered version of the command only. Features still match case insensitive but now receive the original message.
-
-
 
 
 
