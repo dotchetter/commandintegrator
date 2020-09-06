@@ -46,6 +46,6 @@ class Message:
 	"""
 
 	author: str = None
-	content: str = None
+	content: list = None
 	channel: int = None
 	created_at: datetime = None
