@@ -53,8 +53,8 @@ class CommandProcessor:
         self._feature_pronoun_mapping = dict()
 
         if CommandProcessor.DEFAULT_RESPONSES is None:
-            sys.stderr.write(f'{_cim.err}: CommandProcessor has no default responses, exiting.')
-            sys.exit()
+            sys.stderr.write(f'{_cim.err}: CommandProcessor has no default responses and will not function normally')
+
 
     @property
     def features(self) -> tuple:
