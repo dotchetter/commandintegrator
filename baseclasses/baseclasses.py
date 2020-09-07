@@ -161,7 +161,7 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
         in a no-match-found scenario is desired.
         """
         for cb in self._callbacks:
-            match = cb.matches(Message)
+            match = cb.matches(message)
             if match: return cb
         return None
 
