@@ -38,6 +38,7 @@ class Callback:
 		(bool) whether the order of items in the 
 		lead or trail property is trivial or not 
 	"""
+	IGNORED_CHARS = '?=)(/&%¤#"!,.-;:_^*`´><|'
 
 	__slots__ = ('_lead', '_trail', '_func', '_bindings', 
 				 '_interactive', '_ordered', '_intact_lead', 
@@ -90,7 +91,7 @@ class Callback:
 			Bool, True if self matches command
 		"""
 		match_trail = False
-		lowered = [i.lower() for i in message.content]
+		lowered = [i.lower().strip(Callback.IGNORED_CHARS) for i in message.content]
 
 		if not (match_lead := [i for i in self._lead if i in lowered]):
 			return None

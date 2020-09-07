@@ -10,7 +10,6 @@ from os import system
 from datetime import datetime, timedelta, time
 from enum import Enum, auto
 from abc import ABC, abstractmethod
-from copy import deepcopy
 
 from ..core.callback import Callback
 from ..core.internals import _cim
@@ -161,11 +160,8 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
         should be overloaded if a different return behavior 
         in a no-match-found scenario is desired.
         """
-        message_copy = deepcopy(message)
-        message_copy.content = [i.strip(FeatureCommandParserBase.IGNORED_CHARS) for i in message_copy.content]
-        
         for cb in self._callbacks:
-            match = cb.matches(message_copy)
+            match = cb.matches(Message)
             if match: return cb
         return None
 
