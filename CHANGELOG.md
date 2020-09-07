@@ -1,6 +1,11 @@
 
 # Changelog
 
+
+##  Version 1.2.8
+
+* Fixes an issue introduced in 1.2.7 where asynchronous tech stacks would hang with the new implementation of deepcopy used in patch 1.2.7
+
 ##  Version 1.2.7
 
 * Fixes an issue introduced in 1.2.6 where the message content collection would be affected in the processing of the message, causing it to lack special characters
