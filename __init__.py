@@ -22,7 +22,7 @@ from .models.commandparser import CommandParser
 from .models.feature import Feature
 from .models.message import Message
 
-VERSION = '1.2.7'
+__version__ = '1.2.8'
 
 # ------- NOTES: COMMANDINTEGRATOR .SETTINGS FILE  ------- #
 """
