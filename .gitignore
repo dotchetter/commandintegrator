@@ -10,3 +10,4 @@ __pycache__
 
 # ignore IDE
 .idea
+/pypitest_build_and_post.cmd
