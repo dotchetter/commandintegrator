@@ -1,7 +1,6 @@
 import sys
 import os
 import json
-import itertools
 import logging
 from datetime import datetime
 from pathlib import Path
