@@ -1,31 +1,23 @@
-import random
-import json
-import traceback
-import sys
 
-from types import LambdaType
-from ast import literal_eval
-from pprint import pprint
-from os import system
-from datetime import datetime, timedelta, time
-from enum import Enum, auto
+import sys
 from abc import ABC, abstractmethod
 
-from ..core.callback import Callback
-from ..core.internals import _cim
-from ..core.enumerators import CommandPronoun
-from ..models.message import Message
+from commandintegrator.core.callback import Callback
+from commandintegrator.core.internals import _cim
+from commandintegrator.core.enumerators import CommandPronoun
+from commandintegrator.models.message import Message
+
 
 """
 Details:
     2020-06-21
     
-    CommandIntegrator framework baseclass source file
+    commandintegrator framework baseclass source file
 
 Module details:
     
     This file contains abstract and base classes for 
-    the framework called CommandIntegrator. 
+    the framework called commandintegrator. 
 
     In order for a developer to integrate their software
     with a way to bind certain actions and methods in their

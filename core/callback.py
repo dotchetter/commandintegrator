@@ -1,11 +1,11 @@
 from itertools import zip_longest
-from ..models.message import Message
+from commandintegrator.models.message import Message
 
 """
 Details:
     2020-07-17
     
-    CommandIntegrator framework source file with Callback
+    commandintegrator framework source file with Callback
     objects
 
     This module contains objects that are designed to make
@@ -86,7 +86,7 @@ class Callback:
 		exits with False.
 
 		:param message:
-			CommandIntegrator.Message
+			commandintegrator.Message
 		:returns:
 			Bool, True if self matches command
 		"""

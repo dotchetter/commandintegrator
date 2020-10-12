@@ -48,7 +48,7 @@ The `Callback` object has replaced the old structure with dictionaries when crea
 
 **Improvements**
 
-* `import CommandIntegrator` is now the only needed import to access everything within the package. By the use of the `__init__.py` file. `import CommandIntegrator as ci` will give you access to all classes and functions in the package from the `ci.` syntax
+* `import commandintegrator` is now the only needed import to access everything within the package. By the use of the `__init__.py` file. `import commandintegrator as ci` will give you access to all classes and functions in the package from the `ci.` syntax
 
 
 * Language data is migrated to a new file called `language.json` which allows developers to easily increase the support for other languages

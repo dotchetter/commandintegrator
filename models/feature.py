@@ -1,10 +1,10 @@
-from ..baseclasses.baseclasses import FeatureBase
+from commandintegrator.baseclasses.baseclasses import FeatureBase
 
 """
 Details:
     2020-07-05
     
-    CommandIntegrator framework Feature source file
+    commandintegrator framework Feature source file
 
 Module details:
     
@@ -14,7 +14,7 @@ Module details:
     developers to use the default configuration of 
     the Feature without writing a trivial inherit with only
     a constructor for child and parent class, allowing
-    for two ways to develop with CommandIntegrator.
+    for two ways to develop with commandintegrator.
 """
 
 class Feature(FeatureBase):

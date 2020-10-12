@@ -5,7 +5,7 @@ from datetime import datetime
 Details:
     2020-07-05
     
-    CommandIntegrator framework Message source file
+    commandintegrator framework Message source file
 
 Module details:
     
@@ -19,7 +19,7 @@ Module details:
     property of the provided object from the front end,
     so it cannot simply be a string, it needs this property.
 
-    Since CommandIntegrator is supposed to be platform and
+    Since commandintegrator is supposed to be platform and
     API independent, this Message object is used for
     type hinting throughout the framework, and is a good
     contender for when a developer needs a container for 
@@ -30,19 +30,19 @@ Module details:
 @dataclass
 class Message:
 	"""
-	This class represents a crude structure of 
+	This class represents a crude structure of
 	the message object received, inspired by the message class
 	from the the Discord API.
-	
-	The intent with this class is to have something 
+
+	The intent with this class is to have something
 	independet of platform to refer to with the type
-	hinting in this framework, as well as providing 
-	a construct to use if a given platform does not 
+	hinting in this framework, as well as providing
+	a construct to use if a given platform does not
 	provide a message object of this nature from the API.
 
-	The developer can then use the message string and 
-	assign it to the 'content' property, which the 
-	CommandProcessor relies on to function normally. 
+	The developer can then use the message string and
+	assign it to the 'content' property, which the
+	CommandProcessor relies on to function normally.
 	"""
 
 	author: str = None

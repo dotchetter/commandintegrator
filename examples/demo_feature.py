@@ -1,5 +1,5 @@
 import sys
-import CommandIntegrator as ci
+import commandintegrator as ci
 import time
 from pprint import pprint
 
@@ -7,12 +7,12 @@ from pprint import pprint
 Details:
     2020-07-05
     
-    CommandIntegrator framework Demo source file
+    commandintegrator framework Demo source file
 
 Module details:
     
     In this file, you can see a few examples of 
-    how you can develop with CommandIntegator!
+    how you can develop with commandintegrator!
 
     The approach to go the inherit route (recommended)
     or, the more pythonic and simple way where everything
@@ -20,7 +20,7 @@ Module details:
     objects and dynamically assigning values to them.
 
     Please note that this code should be moved to the same
-    directory as the CommandIntegator package for the import
+    directory as the commandintegrator package for the import
     to work.
 """
 
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     # Assign features to the CommandProcessor.
     processor.features = (vulcan_feature_basic, clock_feature_basic)
     
-    print(f'\n# Running CommandIntegrator version: {ci.VERSION}')
+    print(f'\n# Running commandintegrator version: {ci.VERSION}')
     print('# Features loaded: ', '\n')
     [print(f'  - {i}') for i in processor.features]
     print(f'\n# Write a message and press enter, as if you were using your app front end.')

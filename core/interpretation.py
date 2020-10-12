@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-from .enumerators import CommandPronoun
+from commandintegrator.core.enumerators import CommandPronoun
 
 """
 Details:
     2020-07-05
     
-    CommandIntegrator framework Interpretation source file
+    commandintegrator framework Interpretation source file
 
 Module details:
     

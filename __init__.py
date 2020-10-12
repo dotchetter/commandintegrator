@@ -26,7 +26,7 @@ __version__ = '1.2.8'
 
 # ------- NOTES: COMMANDINTEGRATOR .SETTINGS FILE  ------- #
 """
-The details below will read and configure CommandIntegrator
+The details below will read and configure commandintegrator
 according to the settings found in the settings file, by default
 named "commandintegrator.settings". 
 The settings file is presumed to be located within the package
@@ -59,7 +59,7 @@ CHOSEN_LANGUAGE = "en-us"
 # ---------------- Assert settings file presence --------------- # 
 
 if not os.path.isfile(CONFIG_FILE_FULLPATH):
-    _msg = f'CommandIntegrator: Could not find config file ' \
+    _msg = f'commandintegrator: Could not find config file ' \
            f'{CONFIG_FILE_NAME} in {CONFIG_FILE_DIR}'
     sys.stderr.write(_msg)
 
@@ -102,7 +102,7 @@ a weekend. It's so sweet that I can't remove it, so it's here,
 a part of the framework forever, that's the way it is. Consider 
 yourself the founder of an easteregg.
 
-// Simon Olofsson, lead developer and founder of CommandIntegrator
+// Simon Olofsson, lead developer and founder of commandintegrator
 
 """
 

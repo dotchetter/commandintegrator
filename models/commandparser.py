@@ -1,10 +1,10 @@
-from ..baseclasses.baseclasses import FeatureCommandParserBase
+from commandintegrator.baseclasses.baseclasses import FeatureCommandParserBase
 
 """
 Details:
     2020-07-05
     
-    CommandIntegrator framework CommandParser source file
+    commandintegrator framework CommandParser source file
 
 Module details:
     
@@ -15,7 +15,7 @@ Module details:
     use the default configuration of the CommandParser
     without writing a trivial inherit with only
     a constructor for child and parent class, allowing
-    for two ways to develop with CommandIntegrator.
+    for two ways to develop with commandintegrator.
 """
 
 class CommandParser(FeatureCommandParserBase):

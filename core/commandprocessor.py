@@ -3,24 +3,22 @@ import random
 import traceback
 
 from collections.abc import Iterable
-
-from .internals import _cim
-from .interpretation import Interpretation
-from .pronounlookuptable import PronounLookupTable
-
-from ..models.message import Message
-from ..baseclasses.baseclasses import FeatureBase
+from commandintegrator.core.internals import _cim
+from commandintegrator.core.interpretation import Interpretation
+from commandintegrator.core.pronounlookuptable import PronounLookupTable
+from commandintegrator.models.message import Message
+from commandintegrator.baseclasses.baseclasses import FeatureBase
 
 """
 Details:
     2020-07-05
     
-    CommandIntegrator framework ComandProcessor source file
+    commandintegrator framework ComandProcessor source file
 
 Module details:
     
     The CommandProcessor is the routing object of
-    CommandIntegrator, acting as the main agent that
+    commandintegrator, acting as the main agent that
     will direct messages to Features in the application.
 """
 

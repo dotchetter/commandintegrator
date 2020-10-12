@@ -1,12 +1,12 @@
-from .enumerators import CommandPronoun
-from .internals import _cim
-import sys
+from commandintegrator.core.enumerators import CommandPronoun
+from commandintegrator.core.internals import _cim
+
 
 """
 Details:
     2020-07-05
     
-    CommandIntegrator framework PronounLookupTable source file
+    commandintegrator framework PronounLookupTable source file
 
 Module details:
     
@@ -59,7 +59,7 @@ class PronounLookupTable:
                     f'{_cim.warn}: PronounLookupTable is missing pronoun lookups. ' \
                      'Ensure language.json is present and is valid. Use ' \
                      'assign_pronoun_identifiers to set pronouns or refer to ' \
-                     'the documentation for CommandIntegrator on PronounLookupTable.'
+                     'the documentation for commandintegrator on PronounLookupTable.'
                 )
 
         for word in message:

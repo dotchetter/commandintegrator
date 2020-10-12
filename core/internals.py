@@ -6,12 +6,12 @@ from dataclasses import dataclass
 Details:
     2020-07-05
     
-    CommandIntegrator framework internal source file
+    commandintegrator framework internal source file
 
 Module details:
     
     data containers and functions used by objects in
-    the CommandIntegrator package.
+    the commandintegrator package.
 """
 
 
@@ -38,9 +38,9 @@ class _cim:
     """
     This class is only used as a namespace
     for internal messages used by exceptions
-    or elsewhere by CommandIntegrator classes
+    or elsewhere by commandintegrator classes
     and functions. Not for instantiating.
     """
-    deprecated_warn: str = "CommandIntegrator DEPRECATED WARNING"
-    warn: str = "CommandIntegrator WARNING"
-    err: str = "CommandIntegrator ERROR"
+    deprecated_warn: str = "commandintegrator DEPRECATED WARNING"
+    warn: str = "commandintegrator WARNING"
+    err: str = "commandintegrator ERROR"

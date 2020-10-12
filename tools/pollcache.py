@@ -3,7 +3,7 @@
 Details:
     2020-07-05
     
-    CommandIntegrator framework PollCache source file
+    commandintegrator framework PollCache source file
 
 Module details:
     
@@ -13,6 +13,7 @@ Module details:
     a repsonse back when the return changed from
     the most recent one.
 """
+
 
 class PollCache:
     """

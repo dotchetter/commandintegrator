@@ -4,7 +4,7 @@ from enum import Enum, auto
 Details:
     2020-07-05
     
-    CommandIntegrator framework CommandPronoun source file
+    commandintegrator framework CommandPronoun source file
 
 Module details:
     

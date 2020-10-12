@@ -1,12 +1,12 @@
 import json
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime
 
 """
 Details:
     2020-07-05
     
-    CommandIntegrator framework apihandles source file
+    commandintegrator framework apihandles source file
 
 Module details:
     
@@ -14,6 +14,7 @@ Module details:
     functions that make interacting with various
     API's easier.
 """
+
 
 class RestApiHandle:
 	"""
