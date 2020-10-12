@@ -1,7 +1,7 @@
-# commandintegrator
+# CommandIntegrator
 
 ## What it does
-commandintegrator is a lightweight framework and API for creating apps controlled with human language interfaces.
+CommandIntegrator is a lightweight framework and API for creating apps controlled with human language interfaces.
 It concists of base classes and ready-to-use objects along with a set and clear structure for how to develop and scale a chat bot / Virtual assistant. 
 
 Objects such as the `Feature`, which can be thought of a micro service within your app, makes it easier to keep the OOP structure clean and well maintained. Automatic command parsing with the `CommandParser` and `CommandProcessor` makes it very  straight forward to build and scale your command-controlled application without having to worry about name and word collisions, edge-case actions etcetera.
