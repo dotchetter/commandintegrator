@@ -5,18 +5,19 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="commandintegrator",
-    version="1.2.9",
+    version="13",
     author="Simon Olofsson",
     author_email="dotchetter@protonmail.ch",
     description="A framework and API for developing chatbots and other command-driven applications",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/pypa/commandintegrator",
+    url="https://github.com/dotchetter/commandintegrator",
     packages=[
-        'commandintegrator.baseclasses',
-        'commandintegrator.core',
-        'commandintegrator.models',
-        'commandintegrator.tools'
+        "commandintegrator",
+        "commandintegrator.baseclasses",
+        "commandintegrator.core",
+        "commandintegrator.models",
+        "commandintegrator.tools"
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -24,20 +25,17 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "aiohttp >= 3.6.2",
-        "async-timeout >= 3.0.1",
-        "attrs >= 19.3.0",
-        "certifi >= 2020.4.5.1",
-        "chardet >= 3.0.4",
-        "idna >= 2.9",
-        "multidict >= 4.7.5",
-        "pytz >= 2019.3",
-        "requests >= 2.23.0",
-        "style >= 1.1.0",
-        "update >= 0.0.1",
-        "urllib3 >= 1.25.8",
-        "websockets >= 8.1",
-        "yarl >= 1.4.2"
+        "pytz",
+        "requests",
+        "urllib3"
+    ],
+    data_files=[
+        ('config', [
+            "commandintegrator\\language.json",
+            "commandintegrator\\commandintegrator.settings"
+            ]
+        )
     ],
     python_requires='>=3.8',
+    include_package_data=True
 )
