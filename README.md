@@ -1,5 +1,8 @@
 # commandintegrator
 
+## Installation
+`pip install commandintegrator`
+
 ## What it does
 CommandIntegrator is a lightweight framework and API for creating apps controlled with human language interfaces.
 It concists of base classes and ready-to-use objects along with a set and clear structure for how to develop and scale a chat bot / Virtual assistant. 
