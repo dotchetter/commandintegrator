@@ -7,3 +7,6 @@ LICENSE.txt
 
 # ignore cache
 __pycache__
+
+# ignore IDE
+.idea
