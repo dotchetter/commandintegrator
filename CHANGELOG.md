@@ -1,6 +1,10 @@
 
 # Changelog
 
+## Version 1.3.0
+Structural changes to the project with directories and the setup.py file.
+The project is hosted on PyPi with 1.3.0 as the premiere version, yay!
+
 ## Version 1.2.9
 This update is a refactoring update
 
