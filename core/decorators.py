@@ -1,13 +1,12 @@
 import sys
 import functools
-import logging
 
 
 """
 Details:
     2020-07-05
     
-    CommandIntegrator framework source file with decorator
+    commandintegrator framework source file with decorator
     objects
 
     This module contains functions and classes that are
@@ -37,9 +36,9 @@ class Logger:
         the wrapped method are both logged to the log file using
         the static 'logging' instance, configured for the class.
         Simply add the decorator above your method to enable logging
-        for it. Presuming you import this package as CommandIntegrator;
+        for it. Presuming you import this package as commandintegrator;
 
-        @CommandIntegrator.logger.log
+        @commandintegrator.logger.log
         def myfunc(self, *args, **kwargs):
             ...
 
@@ -53,7 +52,7 @@ class Logger:
 
     def __verify_config_complete(self):
         if Logger.LOG_INSTANCE == None:
-            sys.stderr.write('CommandIntegrator -- logging error: Cannot log, no log set.\r\n')
+            sys.stderr.write('commandintegrator -- logging error: Cannot log, no log set.\r\n')
             sys.stderr.write('Configure an instance of logger, and pass it to Logger.set_logger()\r\n.')
     
     @staticmethod
@@ -91,7 +90,7 @@ class Logger:
         return inner
 
     @staticmethod
-    def log(message: str, level = 'debug') -> None:
+    def log(message: str, level='debug') -> None:
         """
         Allow for manual logging during runtime.
         :param message:
@@ -100,7 +99,7 @@ class Logger:
         :returns:
             arbitrary
         """
-        _log_output = f'(!) Manual log entry: {message}'
+        _log_output = f'Manual log entry: {message}'
         _log_levels = {'info': lambda _message: Logger.LOG_INSTANCE.info(_message),
                        'debug': lambda _message: Logger.LOG_INSTANCE.debug(_message),
                        'error': lambda _message: Logger.LOG_INSTANCE.error(_message)}
@@ -112,6 +111,7 @@ class Logger:
     @staticmethod
     def set_logger(logging):
         Logger.LOG_INSTANCE = logging
+
 
 def scheduledmethod(func):
     """
