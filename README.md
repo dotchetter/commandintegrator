@@ -1,4 +1,4 @@
-# CommandIntegrator
+# commandintegrator
 
 ## What it does
 CommandIntegrator is a lightweight framework and API for creating apps controlled with human language interfaces.
