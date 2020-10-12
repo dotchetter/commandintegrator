@@ -1,6 +1,16 @@
 
 # Changelog
 
+## Version 1.2.9
+This update is a refactoring update
+
+* Project renamed from CommandIntegrator to commandintegrator for pypi naming scheme compliance
+* All files in the package reference commandintegrator instead of CommandIntegrator
+* Directories turned into python packages for improved imports
+* "(!) " string removed in manual log entries
+* Licenses included for 3rd party code
+* Mentions added to README
+* setup.py added for commandintergator to be added to pypi
 
 ##  Version 1.2.8
 
