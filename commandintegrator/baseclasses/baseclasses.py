@@ -34,6 +34,7 @@ Module details:
     documentation which can be found in the wiki on GitHub
 """
 
+
 class FeatureCommandParserABC(ABC):
     """
     Describe a data structure that binds certain
