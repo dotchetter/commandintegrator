@@ -212,21 +212,22 @@ class Job(Thread):
                 # Evaluate if self.func and / or recipient is async or
                 # not. Call them accordingly.
                 try:
-                    output = self if self.return_self else self.result
                     # Get the output of the scheduled function
                     if inspect.iscoroutinefunction(self.func):
                         self.result = asyncio.run(self.func(**self.kwargs))
                     else:
                         self.result = self.func(**self.kwargs)
+
                     # Pass it on to the recipient
+                    output = self if self.return_self else self.result
                     if inspect.iscoroutinefunction(self.recipient):
                         asyncio.run(self.recipient(output))
                     else:
                         self.recipient(output)
-
                 except Exception as e:
-                    commandintegrator.logger.log(f"Scheduled Job ran in to a problem. "
-                                                 f"Exception: {e}", level="error")
+                    commandintegrator.logger.log(f"scheduled job '{self.name}' "
+                                                 f"raised {type(e).__name__}('{str(e)}')",
+                                                 level="error")
                     self.error = e
                     break
 
