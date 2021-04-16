@@ -1,6 +1,11 @@
 import sys
 import functools
+from queue import Queue
+from types import GeneratorType
+from typing import List, Union, Dict, Any, Generator
+from multidict import MultiDict
 
+from commandintegrator.tools.schedule.components import TimeTrigger, Job
 
 """
 Details:
@@ -12,6 +17,137 @@ Details:
     This module contains functions and classes that are
     intended for use as decorators throughout the stack.
 """
+
+
+# noinspection PyPep8Naming
+class schedule:
+    """
+    Namespacing static class to schedule
+    function calls, using TimeTrigger and Job
+    objects.
+
+    Works as a decorator using the
+    'method' method as @Schedule.method,
+    or by calling Schedule.run() withr
+    provided args.
+    """
+    id_job_map: Dict[int, Job] = {}
+    name_job_map: MultiDict[str, Job] = MultiDict()
+    outputs: Queue[Any, Any] = Queue()
+
+    @staticmethod
+    def schedule_default_catcher(source: Any, value: Any) -> None:
+        """
+        This is the default method for return values of
+        scheduled jobs, if no recipient is specified
+        by the creator of a scheduled job.
+
+        All Jobs without a designated recipient
+        callable will have their return value end
+        up in this method which maps their return
+        value with themselves as source, in a dict object
+        and stored in the public accessible queue "outputs".
+
+        :param source: Who created this output (most likely, Job instance)
+        :param value: The retur value from source
+        """
+        schedule.outputs.put({source: value})
+
+    @staticmethod
+    def run(func, **kwargs):
+        """
+        Registers a new scheduled Job and starts
+        the countdown for the Job.
+        :param func: the callable to be called when
+                     the TimeTrigger is triggered
+        :param kwargs: kwargs passed to the callable
+                       at time of call
+        """
+        trigger = TimeTrigger(every=kwargs.get("every"),
+                              at=kwargs.get("at"),
+                              after=kwargs.get("after"))
+
+        include_dispatcher = False
+
+        if not (func_kwargs := kwargs.get("kwargs")):
+            func_kwargs = {}
+
+        if not (recipient := kwargs.get("recipient")):
+            recipient = schedule.schedule_default_catcher
+            include_dispatcher = True
+
+        job = Job(func=func, trigger=trigger,
+                  recipient=recipient,
+                  include_dispatcher=include_dispatcher,
+                  **func_kwargs)
+        job.start()
+        schedule.name_job_map.add(job.name, job)
+        schedule.id_job_map[job.native_id] = job
+
+    @staticmethod
+    def method(**kwargs):
+        """
+        Decorator function for self.run, used as
+        @Schedule.method(**kwargs) (See TimeTrigger class
+        for these kwargs)
+        """
+        def decorator(func):
+            schedule.run(func, **kwargs)
+        return decorator
+
+    @staticmethod
+    def get_jobs(job_name: str = None, job_id: int = None) -> Generator[Job, Any, None]:
+        """
+        Returns a Job instance that matches provided
+        args.
+        :param job_name: str, name of the job to return (optional)
+        :param job_id: int, id of the job to return (optional
+        :rtype: Job instance
+        :raises: ValueError, if both name and id are None
+        """
+        if job_name is None and id is None:
+            raise ValueError("either job_name or job_id must be specified")
+
+        if job_name:
+            try:
+                for job in schedule.name_job_map.getall(job_name):
+                    yield job
+            except KeyError:
+                yield
+        elif job_id:
+            try:
+                yield schedule.id_job_map[int(job_id)]
+            except KeyError:
+                yield
+
+    @staticmethod
+    def kill_job_gracefully(job_name=None, job_id=None, job_kwargs=None):
+        """
+        Kill jobs gracefully.
+        :param job_name: str, name of the job
+        :param job_id: int, id of the job
+        :param job_kwargs: kwargs for the job, to
+                separate jobs from others of the same
+                function but with unique kwargs
+        """
+        for job in schedule.get_jobs(job_name, job_id):
+            if job_kwargs and job.kwargs == job_kwargs:
+                job.kill_gracefully()
+                print(f"Found job for kill: {job}")
+            elif not job_kwargs:
+                print(f"Found job for kill: {job}")
+                job.kill_gracefully()
+
+    @staticmethod
+    def get_all_jobs() -> Generator[Job, Any, None]:
+        """
+        Returns all jobs, in name_job_map and id_job_map
+        combined.
+        :rtype: Job
+        """
+        for i in schedule.id_job_map.values():
+            yield i
+
 
 class Logger:
     """
