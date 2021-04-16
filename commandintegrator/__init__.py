@@ -20,15 +20,16 @@ from .core.callback import Callback
 from .models.commandparser import CommandParser
 from .models.feature import Feature
 from .models.message import Message
+from .core.decorators import schedule
 
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
 # ------- NOTES: COMMANDINTEGRATOR .SETTINGS FILE  ------- #
 """
 The details below will read and configure commandintegrator
 according to the settings found in the settings file, by default
 named "commandintegrator.settings". 
-The settings file is presumed to be located within the package
+The settings file is presumed to be located after the package
 root. 
 
 The configuration file is used throughout the framework, so editing
