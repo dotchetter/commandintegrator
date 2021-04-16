@@ -1,10 +1,11 @@
+import asyncio
+import inspect
 import time
-from queue import Queue
 from typing import Callable
 from datetime import datetime, timedelta
 from threading import Thread
 
-from commandintegrator.schedule.scheduled import Scheduled
+import commandintegrator
 
 
 class TimeTrigger:
@@ -62,6 +63,7 @@ class TimeTrigger:
         """
         self.amount_of_runs = 0
         self.next_trigger: datetime = datetime.now()
+        self.last_trigger: datetime = None
         self.reoccurring: bool = False
         self.timedelta_interval: timedelta = None
         self.days_to_run: tuple[int] = None
@@ -98,9 +100,12 @@ class TimeTrigger:
         self.reset()
 
     def __repr__(self):
-        return f"TimeTrigger(next_trigger={self.next_trigger}, " \
+        return f"TimeTrigger(" \
+               f"next_trigger={self.next_trigger}, " \
+               f"last_trigger={self.last_trigger}, " \
                f"amount_of_runs={self.amount_of_runs}, " \
-               f"reoccuring={self.reoccurring})"
+               f"reoccuring={self.reoccurring})" \
+
 
     @staticmethod
     def __validate_timestring(timestr: str) -> str:
@@ -108,14 +113,12 @@ class TimeTrigger:
             return f"{timestr}:00"
         return timestr
 
-    def __bool__(self):
-        return self.poll()
-
-    def poll(self):
+    def is_pulled(self):
         if datetime.now() >= self.next_trigger:
             if self.reoccurring:
                 self.reset()
             self.amount_of_runs += 1
+            self.last_trigger = datetime.now()
             return True
         return False
 
@@ -158,12 +161,19 @@ class Job(Thread):
     def __init__(self, func: Callable,
                  trigger: TimeTrigger,
                  recipient: Callable,
+                 return_self: bool = False,
                  **kwargs):
         super().__init__()
         self.kwargs = kwargs
         self.func = func
         self.trigger = trigger
         self.recipient = recipient
+        self.return_self = return_self
+        self.time_to_die = False
+        self.error = None
+        self.result = None
+        self._running = False
+
         try:
             self.name = func.__name__
         except AttributeError:
@@ -173,10 +183,13 @@ class Job(Thread):
 
     def __repr__(self):
         return f"Job(name={self.name}, " \
-               f"is_alive={self.is_alive()}, " \
-               f"recipient={self.recipient}, " \
+               f"running={self.running}, " \
+               f"recipient={self.recipient.__name__}, " \
+               f"native_id={self.native_id}, " \
+               f"trigger={self.trigger}, " \
                f"kwargs={self.kwargs}, " \
-               f"trigger={self.trigger})"
+               f"result={self.result}, " \
+               f"error={f'{type(self.error).__name__}({self.error})' if self.error else None})"
 
     def run(self) -> None:
         """
@@ -185,14 +198,50 @@ class Job(Thread):
         it's point in time, and call the callable
         passed as self.func.
         """
+        self._running = True
+
         while True:
-            if self.trigger:
+            if self.time_to_die:
+                commandintegrator.logger.log(
+                    f"Job '{self.native_id}' got a "
+                    f"graceful kill signal, shutting "
+                    f"down.")
+                break
+
+            if self.trigger.is_pulled():
+                # Evaluate if self.func and / or recipient is async or
+                # not. Call them accordingly.
                 try:
-                    self.recipient(self.func())
-                except TypeError:
-                    pass
+                    output = self if self.return_self else self.result
+                    # Get the output of the scheduled function
+                    if inspect.iscoroutinefunction(self.func):
+                        self.result = asyncio.run(self.func(**self.kwargs))
+                    else:
+                        self.result = self.func(**self.kwargs)
+                    # Pass it on to the recipient
+                    if inspect.iscoroutinefunction(self.recipient):
+                        asyncio.run(self.recipient(output))
+                    else:
+                        self.recipient(output)
+
+                except Exception as e:
+                    commandintegrator.logger.log(f"Scheduled Job ran in to a problem. "
+                                                 f"Exception: {e}", level="error")
+                    self.error = e
+                    break
+
             if not self.trigger.reoccurring and self.trigger.amount_of_runs > 0:
                 break
             time.sleep(0.01)
-        self.func = None
-        self.trigger = None
+        self._running = False
+
+    @property
+    def running(self) -> bool:
+        return self._running
+
+    def kill_gracefully(self) -> None:
+        """
+        Provices a method to set the self.time_to_die
+        to True to signal it's time to check out
+        """
+        self.time_to_die = True
