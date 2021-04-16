@@ -13,3 +13,5 @@ __pycache__
 /pypitest_build_and_post.cmd
 /commandintegrator.log
 /pypi_build_and_post.cmd
+/commandintegrator.egg-info/
+/dist/
