@@ -33,10 +33,10 @@ class schedule:
     """
     id_job_map: Dict[int, Job] = {}
     name_job_map: MultiDict[str, Job] = MultiDict()
-    outputs: Queue[Any, Any] = Queue()
+    outputs: Queue[Job] = Queue()
 
     @staticmethod
-    def schedule_default_catcher(source: Any, value: Any) -> None:
+    def schedule_default_catcher(job: Job) -> None:
         """
         This is the default method for return values of
         scheduled jobs, if no recipient is specified
@@ -48,10 +48,10 @@ class schedule:
         value with themselves as source, in a dict object
         and stored in the public accessible queue "outputs".
 
-        :param source: Who created this output (most likely, Job instance)
-        :param value: The retur value from source
+        :param job: Job instance which has been executed
+                    at least once
         """
-        schedule.outputs.put({source: value})
+        schedule.outputs.put(job)
 
     @staticmethod
     def run(func, **kwargs):
@@ -62,25 +62,41 @@ class schedule:
                      the TimeTrigger is triggered
         :param kwargs: kwargs passed to the callable
                        at time of call
+
         """
+
+        """
+        Evaluates whether the Job should pass itself to
+        the recipient, or not. Used when no recipient
+        is provided, and schedule.queue is the final
+        destination for the Job. It is useful information
+        in the Job instance itself here, so it makes sense
+        that in this queue the job itself resides with its
+        return value cached in its return_value field.
+        """
+        return_self = False
+
+        # Configure a TimeTrigger based on provided rules
         trigger = TimeTrigger(every=kwargs.get("every"),
                               at=kwargs.get("at"),
                               after=kwargs.get("after"))
 
-        include_dispatcher = False
-
+        # Extract any kwargs to be passed to the scheduled callable
         if not (func_kwargs := kwargs.get("kwargs")):
             func_kwargs = {}
 
+        # Set schedule_default_catcher as default recipient
+        # if not specified
         if not (recipient := kwargs.get("recipient")):
             recipient = schedule.schedule_default_catcher
-            include_dispatcher = True
+            return_self = True
 
+        # Create a Job instance, start it and add it to dicts
         job = Job(func=func, trigger=trigger,
-                  recipient=recipient,
-                  include_dispatcher=include_dispatcher,
+                  recipient=recipient, return_self=return_self,
                   **func_kwargs)
         job.start()
+
         schedule.name_job_map.add(job.name, job)
         schedule.id_job_map[job.native_id] = job
 
@@ -98,8 +114,13 @@ class schedule:
     @staticmethod
     def get_jobs(job_name: str = None, job_id: int = None) -> Generator[Job, Any, None]:
         """
-        Returns a Job instance that matches provided
-        args.
+        Returns Job instance(s) that matches provided
+        args. Since many jobs can share the same name,
+        multidict is used when mapping against its name.
+        Their native_id is unique however, thus a regular
+        dict is used for mapping jobs against their native_id.
+
+
         :param job_name: str, name of the job to return (optional)
         :param job_id: int, id of the job to return (optional
         :rtype: Job instance
