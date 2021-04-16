@@ -186,11 +186,14 @@ class Logger:
 
     LOG_INSTANCE = None
 
-    def __verify_config_complete(self):
-        if Logger.LOG_INSTANCE == None:
-            sys.stderr.write('commandintegrator -- logging error: Cannot log, no log set.\r\n')
-            sys.stderr.write('Configure an instance of logger, and pass it to Logger.set_logger()\r\n.')
-    
+    @staticmethod
+    def __verify_config_complete():
+        if Logger.LOG_INSTANCE is None:
+            sys.stderr.write('commandintegrator -- logging error: '
+                             'Cannot log, no log set.\r\n')
+            sys.stderr.write('Configure an instance of logger, and'
+                             ' pass it to Logger.set_logger()\r\n.')
+
     @staticmethod
     def loggedmethod(func):
         """
@@ -202,56 +205,52 @@ class Logger:
         :returns:
             function
         """
-
         @functools.wraps(func)
         def inner(*args, **kwargs):
             """
             Inner method, executing the func paramter function,
             as well as executing the logger.
-            :param *args:
-                arbitrary parameters for the wrapped function
-            :param **kwargs:
-                arbitrary keyword parameters for the wrapped function
             :returns:
                 Output from executed function in parameter func
             """
             try:
                 results = func(*args, **kwargs)
-                Logger.LOG_INSTANCE.debug(f'Ran method "{func.__name__}" in {func.__module__} ' \
-                          f'with ARGS: {args} & KWARGS: {kwargs} & RETURN: {results}')
+                Logger.LOG_INSTANCE.debug(
+                    f'Ran method "{func.__name__}" in {func.__module__} '
+                    f'with ARGS: {args} & KWARGS: {kwargs} & RETURN: {results}')
                 return results
             except Exception as e:
-                Logger.LOG_INSTANCE.error(f'Exception occured in {func.__name__}: {e}')
+                Logger.LOG_INSTANCE.error(
+                    f'Exception occured in {func.__name__}: {e}')
                 raise e
         return inner
 
     @staticmethod
-    def log(message: str, level='debug') -> None:
+    def log(message: str, level="debug") -> None:
         """
         Allow for manual logging during runtime.
-        :param message:
-            str
-            message to be logged
+        :param message: str, message to be logged
+        :param level: level for logging
         :returns:
             arbitrary
         """
-        _log_output = f'Manual log entry: {message}'
-        _log_levels = {'info': lambda _message: Logger.LOG_INSTANCE.info(_message),
-                       'debug': lambda _message: Logger.LOG_INSTANCE.debug(_message),
-                       'error': lambda _message: Logger.LOG_INSTANCE.error(_message)}
+        log_levels = {'info': lambda _message: Logger.LOG_INSTANCE.info(_message),
+                      'debug': lambda _message: Logger.LOG_INSTANCE.debug(_message),
+                      'error': lambda _message: Logger.LOG_INSTANCE.error(_message)}
         try:
-            _log_levels[level](_log_output)
+            log_levels[level](message)
         except KeyError:
-            _log_levels['debug'](_log_output)
+            log_levels['debug'](message)
 
     @staticmethod
     def set_logger(logging):
         Logger.LOG_INSTANCE = logging
 
 
+# Deprecated since 1.3.1
 def scheduledmethod(func):
     """
-    Scheduled method decorator. In certain applications
+    Schedule method decorator. In certain applications
     the ability to automatically call functions by the
     means of a schedule in some manner, for example with
     a schedule.Scheduler() instance object, it can be 
@@ -266,6 +265,15 @@ def scheduledmethod(func):
     the function output is under the 'result' key, and the
     channel is under the 'channel' key, as seen below.
     """
+
+    # Deprecated since 1.3.1
+    raise DeprecationWarning("The scheduledmethod decorator is deprecated "
+                             "since 1.3.1 and is no longer supported. "
+                             "But fear not - Check out the 'schedule.method' "
+                             "decorator to use the built-in scheduler in the "
+                             "framework!")
+
+    # noinspection PyUnreachableCode
     @functools.wraps(func)
     def scheduled_method_wrapper(*args, **kwargs):
         try:
@@ -275,7 +283,8 @@ def scheduledmethod(func):
         else:
             kwargs.pop('channel')
             return {
-                'result': func(*args, **kwargs), 
+                'result': func(*args, **kwargs),
                 'channel': channel
             }
+
     return scheduled_method_wrapper
