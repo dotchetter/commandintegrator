@@ -1,8 +1,10 @@
+import inspect
 import sys
 import functools
+from datetime import datetime
 from queue import Queue
 from types import GeneratorType
-from typing import List, Union, Dict, Any, Generator
+from typing import List, Union, Dict, Any, Generator, Callable
 from multidict import MultiDict
 
 from commandintegrator.tools.schedule.components import TimeTrigger, Job
@@ -36,6 +38,81 @@ class schedule:
     outputs: Queue[Job] = Queue()
 
     @staticmethod
+    def __prepare_partial(func, **kwargs) -> functools.partial:
+        """
+        Create a functools.partial object with the
+        kwargs from kwargs['kwargs'] (parsed from the
+        decorator arg list as @schedule.method(**kwargs).
+
+        If the method has no arguments except maybe self,
+        wrap it with None as kwargs.
+
+        args unpacking is not supported therefore omitted
+        as None for partials.
+        """
+
+        # Examine if the method takes parameters or not
+        func_sig = inspect.signature(func)
+        if len(func_sig.parameters):
+            if func_kwargs := kwargs.get("kwargs"):
+                func = functools.partial(func, None, **func_kwargs)
+            else:
+                func = functools.partial(func, None)
+        else:
+            func = functools.partial(func)
+        return func
+
+    @staticmethod
+    def __create_job(func: functools.partial,
+                     at: str=None, every: str=None,
+                     after: str=None, exactly_at: datetime=None,
+                     recipient: str=None):
+        """
+        Registers a new scheduled Job and starts
+        the countdown for the Job.
+        :param func: the callable to be called when
+                     the TimeTrigger is triggered
+
+        Evaluates whether the Job should pass itself to
+        the recipient, or not. Used when no recipient
+        is provided, and schedule.queue is the final
+        destination for the Job. It is useful information
+        in the Job instance itself here, so it makes sense
+        that in this queue the job itself resides with its
+        return value cached in its return_value field.
+
+        :param func: partials object, ready wrapped function
+                     bundled with its associated args and
+                     kwargs
+        :param at: str, argument for TimeTrigger object
+        :param every: str, argument for TimeTrigger object
+        :param after: str, argument for TimeTrigger object
+        :param exactly_at: datetime, optional exact point in time
+        :param recipient: callable, optional. Which function
+                          to pass any return value from executed
+                          job.
+        """
+
+        return_self = False
+
+        # Configure a TimeTrigger based on provided rules
+        trigger = TimeTrigger(every=every, at=at,
+                              after=after, exactly_at=exactly_at)
+
+        if not (recipient := recipient):
+            recipient = schedule.schedule_default_catcher
+            return_self = True
+
+        job = Job(func=func,
+                  trigger=trigger,
+                  recipient=recipient,
+                  return_self=return_self)
+        job.start()
+        schedule.name_job_map.add(job.name, job)
+        schedule.id_job_map[job.native_id] = job
+        return func
+
+    @staticmethod
     def schedule_default_catcher(job: Job) -> None:
         """
         This is the default method for return values of
@@ -54,65 +131,43 @@ class schedule:
         schedule.outputs.put(job)
 
     @staticmethod
-    def run(func, **kwargs):
-        """
-        Registers a new scheduled Job and starts
-        the countdown for the Job.
-        :param func: the callable to be called when
-                     the TimeTrigger is triggered
-        :param kwargs: kwargs passed to the callable
-                       at time of call
-
-        """
-
-        """
-        Evaluates whether the Job should pass itself to
-        the recipient, or not. Used when no recipient
-        is provided, and schedule.queue is the final
-        destination for the Job. It is useful information
-        in the Job instance itself here, so it makes sense
-        that in this queue the job itself resides with its
-        return value cached in its return_value field.
-        """
-        return_self = False
-
-        # Configure a TimeTrigger based on provided rules
-        trigger = TimeTrigger(every=kwargs.get("every"),
-                              at=kwargs.get("at"),
-                              after=kwargs.get("after"))
-
-        # Extract any kwargs to be passed to the scheduled callable
-        if not (func_kwargs := kwargs.get("kwargs")):
-            func_kwargs = {}
-
-        # Set schedule_default_catcher as default recipient
-        # if not specified
-        if not (recipient := kwargs.get("recipient")):
-            recipient = schedule.schedule_default_catcher
-            return_self = True
-
-        # Create a Job instance, start it and add it to dicts
-        job = Job(func=func, trigger=trigger,
-                  recipient=recipient, return_self=return_self,
-                  **func_kwargs)
-        job.start()
-
-        schedule.name_job_map.add(job.name, job)
-        schedule.id_job_map[job.native_id] = job
-
-    @staticmethod
-    def method(**kwargs):
+    def run(**kwargs) -> Callable:
         """
         Decorator function for self.run, used as
         @Schedule.method(**kwargs) (See TimeTrigger class
         for these kwargs)
         """
-        def decorator(func):
-            schedule.run(func, **kwargs)
+        def decorator(func) -> functools.partial:
+            """
+            Decorator, returns the partial object wrapped
+            and ready for being wrapped in a Job object
+            for later execution.
+            """
+            func = schedule.__prepare_partial(func, **kwargs)
+            schedule.__create_job(func, every=kwargs.get("every"),
+                                  at=kwargs.get("at"),
+                                  after=kwargs.get("after"),
+                                  exactly_at=kwargs.get("exactly_at"),
+                                  recipient=kwargs.get("recipient"))
+            return func
         return decorator
 
     @staticmethod
-    def get_jobs(job_name: str = None, job_id: int = None) -> Generator[Job, Any, None]:
+    def schedule(func: Callable, **kwargs) -> None:
+        """
+        This method acts as a public api to schedule
+        functions without using the decorator "schedule.method"
+        """
+        func = schedule.__prepare_partial(func, **kwargs)
+        schedule.__create_job(func, every=kwargs.get("every"),
+                              at=kwargs.get("at"),
+                              after=kwargs.get("after"),
+                              exactly_at=kwargs.get("exactly_at"),
+                              recipient=kwargs.get("recipient"))
+
+    @staticmethod
+    def get_jobs(job_name: str = None, job_id: int = None) -> \
+            Generator[Job, Any, None]:
         """
         Returns Job instance(s) that matches provided
         args. Since many jobs can share the same name,
@@ -226,6 +281,7 @@ class Logger:
         :returns:
             function
         """
+        print("Logged method: ", func)
         @functools.wraps(func)
         def inner(*args, **kwargs):
             """

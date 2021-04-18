@@ -38,7 +38,8 @@ class TimeTrigger:
         "second": timedelta(seconds=1),
     }
 
-    def __init__(self, at=None, every=None, after=None):
+    def __init__(self, at: str=None, every: str=None,
+                 after=None, exactly_at: datetime=None):
         """
         Configures the TimeTrigger object according
         to provided arguments.
@@ -56,10 +57,17 @@ class TimeTrigger:
                 "hour"
                 "minute"
                 "second"
-        param at: str, time of scheduling.
+        :param at: str, time of scheduling.
                   Valid in HH:MM:SS format or HH:MM format.
                   Example: "10:00" or "10:00:22". Seconds (SS)
                   defaults to 00 if not specified.
+        :param exactly_at: datetime object which will be set to
+                           self.next_trigger if present, bypassing
+                           the other parameters every, at, and after.
+                           Useful for scenarios when a datetime
+                           object is created outside by the creator
+                           for a specific day and time when the job
+                           is to be run.
         """
         self.amount_of_runs = 0
         self.next_trigger: datetime = datetime.now()
@@ -69,6 +77,8 @@ class TimeTrigger:
         self.days_to_run: tuple[int] = None
         self.after = None
 
+        if exactly_at:
+            self.next_trigger = exactly_at
         if at:
             at = self.__validate_timestring(at)
             parsed_time = datetime.strptime(at, self.timeformat)
@@ -94,9 +104,12 @@ class TimeTrigger:
             elif isinstance(_repeat_every, timedelta):
                 # It's every minute, hour or second
                 self.timedelta_interval = _repeat_every
-        if not any((at, every, after)):
+
+        if not any((at, every, after, exactly_at)):
             raise AttributeError("TimeTrigger needs at least one rule "
-                                 "for scheduling: 'every', 'at', 'after'")
+                                 "for scheduling: 'every', 'at', 'after', "
+                                 "'exactly_at'")
+
         self.reset()
 
     def __repr__(self):
@@ -161,11 +174,10 @@ class Job(Thread):
     def __init__(self, func: Callable,
                  trigger: TimeTrigger,
                  recipient: Callable,
-                 return_self: bool = False,
-                 **kwargs):
+                 return_self: bool = False):
         super().__init__()
-        self.kwargs = kwargs
         self.func = func
+        self.func_name = func.func.__name__
         self.trigger = trigger
         self.recipient = recipient
         self.return_self = return_self
@@ -174,22 +186,16 @@ class Job(Thread):
         self.result = None
         self._running = False
 
-        try:
-            self.name = func.__name__
-        except AttributeError:
-            raise SyntaxError("A method already decorated with "
-                              "'@scheduled.method' cannot be scheduled "
-                              "using scheduled.run")
-
     def __repr__(self):
-        return f"Job(name={self.name}, " \
+        return f"Job(" \
+               f"func_name={self.func_name}, " \
                f"running={self.running}, " \
                f"recipient={self.recipient.__name__}, " \
                f"native_id={self.native_id}, " \
                f"trigger={self.trigger}, " \
-               f"kwargs={self.kwargs}, " \
-               f"result={self.result}, " \
-               f"error={f'{type(self.error).__name__}({self.error})' if self.error else None})"
+               f"result='{self.result}', " \
+               f"error={f'{type(self.error).__name__}({self.error})' if self.error else None}" \
+               f")"
 
     def run(self) -> None:
         """
@@ -209,15 +215,24 @@ class Job(Thread):
                 break
 
             if self.trigger.is_pulled():
+
                 # Evaluate if self.func and / or recipient is async or
                 # not. Call them accordingly.
                 try:
                     # Get the output of the scheduled function
                     if inspect.iscoroutinefunction(self.func):
-                        self.result = asyncio.run(self.func(**self.kwargs))
+                        self.result = asyncio.run(self.func())
                     else:
-                        self.result = self.func(**self.kwargs)
+                        self.result = self.func()
+                except Exception as e:
+                    commandintegrator.logger.log(f"The scheduled job '{self.name}' "
+                                                 f"raised {type(e).__name__}('{str(e)}') "
+                                                 f"upon executing it", level="error")
+                    self.error = e
+                    break
 
+                # Call the recipient function with the job output
+                try:
                     # Pass it on to the recipient
                     output = self if self.return_self else self.result
                     if inspect.iscoroutinefunction(self.recipient):
@@ -225,11 +240,13 @@ class Job(Thread):
                     else:
                         self.recipient(output)
                 except Exception as e:
-                    commandintegrator.logger.log(f"scheduled job '{self.name}' "
-                                                 f"raised {type(e).__name__}('{str(e)}')",
-                                                 level="error")
-                    self.error = e
+                    commandintegrator.logger.log(f"The scheduled job '{self.name}' "
+                                                 f"ran OK but the recipient function "
+                                                 f"{self.recipient} raised {type(e).__name__}"
+                                                 f"('{str(e)}') ", level="error")
                     break
+                else:
+                    commandintegrator.logger.log(f"{self} ran successfully", level="info")
 
             if not self.trigger.reoccurring and self.trigger.amount_of_runs > 0:
                 break
