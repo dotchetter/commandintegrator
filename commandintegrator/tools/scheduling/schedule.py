@@ -6,7 +6,7 @@ from queue import Queue
 from typing import Dict, Generator, Any, List
 
 from multidict import MultiDict
-from commandintegrator.tools.components import Job, TimeTrigger
+from commandintegrator.tools.scheduling.components import Job, TimeTrigger
 from commandintegrator.core.decorators import Logger
 
 
