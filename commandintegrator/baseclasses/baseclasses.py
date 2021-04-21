@@ -148,8 +148,8 @@ class FeatureCommandParserBase(FeatureCommandParserABC):
     
     def get_callback(self, message: Message) -> Callback:
         """
-        Returns the method (function object) bound to a 
-        Callback object, if eligible. This method 
+        Returns the method (function object) bound to a
+        Callback object, if eligible. This method
         should be overloaded if a different return behavior 
         in a no-match-found scenario is desired.
         """

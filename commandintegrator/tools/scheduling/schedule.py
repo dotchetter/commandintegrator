@@ -45,38 +45,42 @@ class Scheduled:
                      and context
         :param at: str, argument for TimeTrigger object
         :param every: str, argument for TimeTrigger object
-        :param after: str, argument for TimeTrigger object
+        :param delay: str, argument for TimeTrigger object
         :param exactly_at: datetime, optional exact point in time
         :param recipient: callable, optional. Which function
                           to pass any return value from executed
                           job.
+        :param func_name: str, name of original callable
         """
 
         return_self = False
 
         # Configure a TimeTrigger based on provided rules
         trigger = TimeTrigger(every=every, at=at,
-                              after=after, exactly_at=exactly_at)
+                              delay=delay, exactly_at=exactly_at)
 
         if not (recipient := recipient):
-            recipient = Scheduled.schedule_default_catcher
+            recipient = scheduler.schedule_default_catcher
             return_self = True
 
         job = Job(func=func,
                   trigger=trigger,
                   recipient=recipient,
+                  func_name=func_name,
                   return_self=return_self)
+
+        Logger.log(f"Scheduler created job {job}", level="info")
+        scheduler.name_job_map.add(job.func_name, job)
+        scheduler.id_job_map[job.native_id] = job
+
         job.start()
-        print("Schedule started job") # TODO debug
-        Scheduled.name_job_map.add(job.name, job)
-        Scheduled.id_job_map[job.native_id] = job
 
     @staticmethod
     def schedule_default_catcher(job: Job) -> None:
         """
         This is the default method for return values of
-        Scheduled jobs, if no recipient is specified
-        by the creator of a Scheduled job.
+        scheduler jobs, if no recipient is specified
+        by the creator of a scheduler job.
 
         All Jobs without a designated recipient
         callable will have their return value end
@@ -87,7 +91,7 @@ class Scheduled:
         :param job: Job instance which has been executed
                     at least once
         """
-        Scheduled.outputs.put(job)
+        scheduler.outputs.put(job)
 
     @staticmethod
     def get_jobs(job_name: str = None, job_id: int = None) -> \
@@ -110,13 +114,13 @@ class Scheduled:
 
         if job_name:
             try:
-                for job in Scheduled.name_job_map.getall(job_name):
+                for job in scheduler.name_job_map.getall(job_name):
                     yield job
             except KeyError:
                 yield
         elif job_id:
             try:
-                yield Scheduled.id_job_map[int(job_id)]
+                yield scheduler.id_job_map[int(job_id)]
             except KeyError:
                 yield
 
@@ -127,7 +131,7 @@ class Scheduled:
         :param job_name: str, name of the job
         :param job_id: int, id of the job
         """
-        for job in Scheduled.get_jobs(job_name, job_id):
+        for job in scheduler.get_jobs(job_name, job_id):
             job.kill_gracefully()
 
     @staticmethod
@@ -137,48 +141,17 @@ class Scheduled:
         combined.
         :rtype: Job
         """
-        for i in Scheduled.id_job_map.values():
+        for i in scheduler.id_job_map.values():
             yield i
 
     @staticmethod
     def has_outputs() -> bool:
         """
         Returns whether there are outputs in
-        the output queue 'Scheduled.outputs'
+        the output queue 'scheduler.outputs'
         """
-        return bool(Scheduled.outputs.qsize())
+        return bool(scheduler.outputs.qsize())
 
-
-class Decorate:
-
-    def __init__(self, **decorator_kwargs):
-
-        self.scheduling_configured = False
-
-        if job_kwargs := decorator_kwargs.get("kwargs"):
-            self.timetrigger_kwargs = decorator_kwargs.pop("kwargs")
-        else:
-            job_kwargs = {}
-        self.job_kwargs = job_kwargs
-        self.timetrigger_kwargs = decorator_kwargs
-
-
-        print(f"DEBUG: Decorate.__init__: self.timetrigger_kwargs: {self.timetrigger_kwargs}")
-        print(f"DEBUG: Decorate.__init__: self.job_kwargs: {self.job_kwargs}")
-
-    def __call__(self, func):
-        @functools.wraps(func)
-        def decorated(*args, **kwargs):
-
-            return_value = func(*args, **self.job_kwargs)
-            if not self.scheduling_configured:
-
-                job_func = lambda: func(*args, **self.job_kwargs)
-
-                Scheduled.run(job_func, **self.timetrigger_kwargs)
-                self.scheduling_configured = True
-            return return_value
-        return decorated
-
-    def __get__(self, ctx, owner):
-        return functools.partial(self, ctx)
+    @staticmethod
+    def get_latest_output():
+        return scheduler.outputs.get()

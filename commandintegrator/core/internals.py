@@ -17,7 +17,7 @@ Module details:
 
 def is_dst(dt: datetime = datetime.now(), timezone: str = "Europe/Stockholm"):
     """
-    Method for returning a bool whether or not a timezone
+    method for returning a bool whether or not a timezone
     currently is in daylight savings time, useful for servers
     that run systems outside of the user timezone.
     :param dt:

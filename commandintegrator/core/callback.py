@@ -23,16 +23,16 @@ class Callback:
 	sequence of words are established.
 
 	It enables developers to quickly and easily create 
-	callback bindings that automate the structure after
+	callback bindings that automate the structure delay
 	instantiation.
 
 	lead:
 		(tuple) words in sequence
 	trail:
 		(tuple) words in sequence, that must be present 
-		after words in the _lead tuple
+		delay words in the _lead tuple
 	func:
-		method / function / callable that will execute 
+		method / function / callable that will execute
 		if binding matches command
 	ordered:
 		(bool) whether the order of items in the 
@@ -73,7 +73,7 @@ class Callback:
 		similarly if it is defined - otherwise not. 
 
 		The self.trail string / collection of strings has to,
-		by definition, appear after the words in self.lead.
+		by definition, appear delay the words in self.lead.
 		This is asserted by first identifying the words that
 		matches the trail in the message. The words that also
 		are present in the lead are removed by subtraction.
@@ -82,7 +82,7 @@ class Callback:
 		the index of the word compared between the two. If 
 		the index is higher in the trail than the lead, the
 		loop continues and will eventually exhaust. 
-		If not, the trail condition is not met and method 
+		If not, the trail condition is not met and method
 		exits with False.
 
 		:param message:

@@ -10,7 +10,7 @@ Details:
 Module details:
     
     the Interpretation object represents the final
-    output from a Feature after the processing is 
+    output from a Feature delay the processing is 
     done. It will be instantiated and attribute
     set by the CommandProcessor object, and contain
     data about the identified pronouns, name of the

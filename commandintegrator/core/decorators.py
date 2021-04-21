@@ -1,13 +1,5 @@
-import inspect
 import sys
 import functools
-from datetime import datetime
-from queue import Queue
-from types import GeneratorType
-from typing import List, Union, Dict, Any, Generator, Callable
-from multidict import MultiDict
-
-from commandintegrator.tools.schedule.components import TimeTrigger, Job
 
 """
 Details:
@@ -22,209 +14,6 @@ Details:
 
 
 # noinspection PyPep8Naming
-class schedule:
-    """
-    Namespacing static class to schedule
-    function calls, using TimeTrigger and Job
-    objects.
-
-    Works as a decorator using the
-    'method' method as @Schedule.method,
-    or by calling Schedule.run() withr
-    provided args.
-    """
-    id_job_map: Dict[int, Job] = {}
-    name_job_map: MultiDict[str, Job] = MultiDict()
-    outputs: Queue[Job] = Queue()
-
-    @staticmethod
-    def __prepare_partial(func, **kwargs) -> functools.partial:
-        """
-        Create a functools.partial object with the
-        kwargs from kwargs['kwargs'] (parsed from the
-        decorator arg list as @schedule.method(**kwargs).
-
-        If the method has no arguments except maybe self,
-        wrap it with None as kwargs.
-
-        args unpacking is not supported therefore omitted
-        as None for partials.
-        """
-
-        # Examine if the method takes parameters or not
-        func_sig = inspect.signature(func)
-        if len(func_sig.parameters):
-            if func_kwargs := kwargs.get("kwargs"):
-                func = functools.partial(func, None, **func_kwargs)
-            else:
-                func = functools.partial(func, None)
-        else:
-            func = functools.partial(func)
-        return func
-
-    @staticmethod
-    def __create_job(func: functools.partial,
-                     at: str=None, every: str=None,
-                     after: str=None, exactly_at: datetime=None,
-                     recipient: str=None):
-        """
-        Registers a new scheduled Job and starts
-        the countdown for the Job.
-        :param func: the callable to be called when
-                     the TimeTrigger is triggered
-
-        Evaluates whether the Job should pass itself to
-        the recipient, or not. Used when no recipient
-        is provided, and schedule.queue is the final
-        destination for the Job. It is useful information
-        in the Job instance itself here, so it makes sense
-        that in this queue the job itself resides with its
-        return value cached in its return_value field.
-
-        :param func: partials object, ready wrapped function
-                     bundled with its associated args and
-                     kwargs
-        :param at: str, argument for TimeTrigger object
-        :param every: str, argument for TimeTrigger object
-        :param after: str, argument for TimeTrigger object
-        :param exactly_at: datetime, optional exact point in time
-        :param recipient: callable, optional. Which function
-                          to pass any return value from executed
-                          job.
-        """
-
-        return_self = False
-
-        # Configure a TimeTrigger based on provided rules
-        trigger = TimeTrigger(every=every, at=at,
-                              after=after, exactly_at=exactly_at)
-
-        if not (recipient := recipient):
-            recipient = schedule.schedule_default_catcher
-            return_self = True
-
-        job = Job(func=func,
-                  trigger=trigger,
-                  recipient=recipient,
-                  return_self=return_self)
-        job.start()
-        schedule.name_job_map.add(job.name, job)
-        schedule.id_job_map[job.native_id] = job
-        return func
-
-    @staticmethod
-    def schedule_default_catcher(job: Job) -> None:
-        """
-        This is the default method for return values of
-        scheduled jobs, if no recipient is specified
-        by the creator of a scheduled job.
-
-        All Jobs without a designated recipient
-        callable will have their return value end
-        up in this method which maps their return
-        value with themselves as source, in a dict object
-        and stored in the public accessible queue "outputs".
-
-        :param job: Job instance which has been executed
-                    at least once
-        """
-        schedule.outputs.put(job)
-
-    @staticmethod
-    def run(**kwargs) -> Callable:
-        """
-        Decorator function for self.run, used as
-        @Schedule.method(**kwargs) (See TimeTrigger class
-        for these kwargs)
-        """
-        def decorator(func) -> functools.partial:
-            """
-            Decorator, returns the partial object wrapped
-            and ready for being wrapped in a Job object
-            for later execution.
-            """
-            func = schedule.__prepare_partial(func, **kwargs)
-            schedule.__create_job(func, every=kwargs.get("every"),
-                                  at=kwargs.get("at"),
-                                  after=kwargs.get("after"),
-                                  exactly_at=kwargs.get("exactly_at"),
-                                  recipient=kwargs.get("recipient"))
-            return func
-        return decorator
-
-    @staticmethod
-    def schedule(func: Callable, **kwargs) -> None:
-        """
-        This method acts as a public api to schedule
-        functions without using the decorator "schedule.method"
-        """
-        func = schedule.__prepare_partial(func, **kwargs)
-        schedule.__create_job(func, every=kwargs.get("every"),
-                              at=kwargs.get("at"),
-                              after=kwargs.get("after"),
-                              exactly_at=kwargs.get("exactly_at"),
-                              recipient=kwargs.get("recipient"))
-
-    @staticmethod
-    def get_jobs(job_name: str = None, job_id: int = None) -> \
-            Generator[Job, Any, None]:
-        """
-        Returns Job instance(s) that matches provided
-        args. Since many jobs can share the same name,
-        multidict is used when mapping against its name.
-        Their native_id is unique however, thus a regular
-        dict is used for mapping jobs against their native_id.
-
-
-        :param job_name: str, name of the job to return (optional)
-        :param job_id: int, id of the job to return (optional
-        :rtype: Job instance
-        :raises: ValueError, if both name and id are None
-        """
-        if job_name is None and id is None:
-            raise ValueError("either job_name or job_id must be specified")
-
-        if job_name:
-            try:
-                for job in schedule.name_job_map.getall(job_name):
-                    yield job
-            except KeyError:
-                yield
-        elif job_id:
-            try:
-                yield schedule.id_job_map[int(job_id)]
-            except KeyError:
-                yield
-
-    @staticmethod
-    def kill_job_gracefully(job_name=None, job_id=None, job_kwargs=None):
-        """
-        Kill jobs gracefully.
-        :param job_name: str, name of the job
-        :param job_id: int, id of the job
-        :param job_kwargs: kwargs for the job, to
-                separate jobs from others of the same
-                function but with unique kwargs
-        """
-        for job in schedule.get_jobs(job_name, job_id):
-            if job_kwargs and job.kwargs == job_kwargs:
-                job.kill_gracefully()
-                print(f"Found job for kill: {job}")
-            elif not job_kwargs:
-                print(f"Found job for kill: {job}")
-                job.kill_gracefully()
-
-    @staticmethod
-    def get_all_jobs() -> Generator[Job, Any, None]:
-        """
-        Returns all jobs, in name_job_map and id_job_map
-        combined.
-        :rtype: Job
-        """
-        for i in schedule.id_job_map.values():
-            yield i
-
-
 class Logger:
     """
     Wrapper class designed to work as a method
@@ -281,7 +70,6 @@ class Logger:
         :returns:
             function
         """
-        print("Logged method: ", func)
         @functools.wraps(func)
         def inner(*args, **kwargs):
             """
@@ -335,7 +123,7 @@ def scheduledmethod(func):
     the front end application such as a Discord or Slack
     server. If, however the method is called as per usual,
     the behavior is not altered. Add this decorator above
-    a method in your stack, and then add the parameter 
+    a method in your stack, and then add the parameter
     'channel' when you call it through the scheduler routine.
 
     The returned value from this will be a dictionary where
