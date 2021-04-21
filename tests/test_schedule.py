@@ -1,54 +1,64 @@
+import asyncio
 import time
-from datetime import datetime, timedelta
-from unittest import TestCase, skip
+from datetime import datetime
 import commandintegrator as ci
-from functools import partial
+
+
+class TimeFeature:
+
+    def __init__(self, offset=0):
+        self.minutes = 0 + offset
+
+    @ci.scheduler.method(every="wednesday", at="21:46",
+                         kwargs={"country": "sverige", "greeting": "hej"})
+    def get_time(self, country=None, greeting=None):
+        return f"{greeting}! Klockan är {datetime.now().strftime('%H:%M')} i {country}"
+
+    @ci.scheduler.method(every="second")
+    def get_minutes(self, arg=1):
+        self.minutes += arg
+        return f"{self.minutes} seconds passed"
 
 
 async def recieve(msg=None):
     print("Async receiver:", msg)
 
 
-class TimeFeature:
+@ci.scheduler.method(every="second", delay="00:00:15", kwargs={"a": 1, "b": 2}, recipient=print)
+def get_sum(a, b, c=0):
+    return a + b + c
+
+
+class User:
 
     def __init__(self, name):
         self.name = name
-        # super().__init__()
-        # self.command_parser = ci.CommandParser(keywords="klockan")
-        # self.command_parser.callbacks = ci.Callback("klockan", self.get_time)
-        # ci.schedule.run(self.get_time, )
 
-    @ci.schedule.run(every="second", kwargs={"country": "sverige", "greeting": "hej"})
-    def get_time(self, country=None, greeting=None):
-        return f"{greeting}! Klockan är {datetime.now().strftime('%H:%M')} i {country}, {self}"
-
-    @ci.schedule.run(every="second", recipient=recieve)
-    def no_args(self):
-        return f"I just return this string as async: {self}"
+    @ci.scheduler.method(every="second", delay="00:00:10", recipient=print)
+    async def get_name(self):
+        return self.name
 
 
 if __name__ == "__main__":
 
-    tf = TimeFeature(name="hejsan")
+    # ci.scheduler.allow_multiple = True
 
-   #@ci.schedule.run(after="00:00:05", every="second")
-    def two_seconds():
-        return "five seconds!"
+    print("*" * 50, sep="")
 
-    #@ci.schedule.run(every="second")
-    async def hello_world():
-        return "hello world"
+    get_sum(1, 1)
 
-    # ci.schedule.schedule(func=hello_world, every="minute")
+    urban = User(name="urban")
+    tomas = User(name="tomas")
 
-    now = datetime.now()
-    now += timedelta(seconds=5)
+    print(ci.scheduler.unstarted)
 
-    @ci.schedule.run(exactly_at=now)
-    def thankgoditsfriday():
-        return f"I ran {datetime.now()}"
+    print(asyncio.run(urban.get_name()))
+    print(asyncio.run(tomas.get_name()))
+
+    print(ci.scheduler.unstarted)
+
+    # Simulerar main loop
     while 1:
         time.sleep(0.01)
-        job = ci.schedule.outputs.get()
-        if job:
-            print(job.result)
+        if ci.scheduler.has_outputs():
+            print(ci.scheduler.outputs.get())
