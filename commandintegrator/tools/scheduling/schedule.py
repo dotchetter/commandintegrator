@@ -1,13 +1,17 @@
 import functools
+import inspect
+
 from datetime import datetime
 from queue import Queue
-from typing import Dict, Generator, Any
+from typing import Dict, Generator, Any, List
 
 from multidict import MultiDict
 from commandintegrator.tools.components import Job, TimeTrigger
+from commandintegrator.core.decorators import Logger
 
 
-class Scheduled:
+# noinspection PyPep8Naming
+class scheduler:
     """
     Namespacing static class to schedule
     function calls, using TimeTrigger and Job
@@ -21,13 +25,81 @@ class Scheduled:
     id_job_map: Dict[int, Job] = {}
     name_job_map: MultiDict[str, Job] = MultiDict()
     outputs: Queue[Job] = Queue()
+    unstarted: List[Job] = []
+
+    # noinspection PyPep8Naming
+    # Decorator
+    class method:
+        """
+        Decorator to be used with class methods.
+        The decorated method will be scheduled
+        only once, independent of the instance.
+
+        If kwargs are to be passed to the
+        method at runtime, specify these in the
+        'kwargs' argument for the scheduler,
+        as dict.
+        """
+
+        def __init__(self, **decorator_kwargs):
+            if job_kwargs := decorator_kwargs.get("kwargs"):
+                self.timetrigger_kwargs = decorator_kwargs.pop("kwargs")
+            else:
+                job_kwargs = {}
+            self.job_kwargs = job_kwargs
+            self.timetrigger_kwargs = decorator_kwargs
+
+        def __call__(self, func):
+            """
+            Call the decorated function / method, pass
+            context if it's a bound method, else not.
+            Set kwargs for the TimeTrigger name attribute
+            as the function is called by __name__.
+
+            The function is later wrapped as a partial,
+            ready with context and arguments for it being
+            run as a Job in the background, by passing
+            it to _register_job
+            """
+
+            scheduler.unstarted.append(func)
+
+            @functools.wraps(func)
+            def decorated(*args, **kwargs):
+                # Call the function with it's provided args and kwargs
+                return_value = func(*args, **kwargs)
+                self.timetrigger_kwargs["func_name"] = func.__name__
+
+                # Method or function? Pass context if method, otherwise not
+                if "self" in inspect.signature(func).parameters:
+                    # Isolate the reference to self, discard args
+                    ctx = args[0] if len(args) else None
+                    job_func = functools.partial(func, ctx, **self.job_kwargs)
+                else:
+                    job_func = functools.partial(func, **self.job_kwargs)
+
+                # Pass the partial function to _register_job to set up a Job
+                scheduler._register_job(job_func, **self.timetrigger_kwargs)
+                try:
+                    scheduler.unstarted.remove(func)
+                except ValueError:
+                    pass
+                return return_value
+            return decorated
+
+        def __get__(self, ctx, owner):
+            """
+            Handle context and owner, making the
+            method object a descriptor
+            """
+            return functools.partial(self, ctx)
 
     @staticmethod
-    def run(func, at: str=None, every: str=None,
-            after: str=None, exactly_at: datetime=None,
-            recipient: str=None) -> None:
+    def _register_job(func, at: str = None, every: str = None,
+                      delay: str = None, exactly_at: datetime = None,
+                      recipient: str = None, func_name="n/a") -> None:
         """
-        Registers a new Scheduled Job and starts
+        Registers a new scheduler Job and starts
         the countdown for the Job.
         :param func: the callable to be called when
                      the TimeTrigger is triggered
