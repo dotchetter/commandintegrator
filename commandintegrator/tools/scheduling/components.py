@@ -163,7 +163,7 @@ class TimeTrigger:
 
 class Job(Thread):
     """
-    Threaded job, scheduler for a specific
+    Threaded job, scheduled for a specific
     interval and / or time of execution.
 
     The Job class is runnable as a separate
@@ -224,13 +224,13 @@ class Job(Thread):
                 # Evaluate if self.func and / or recipient is async or
                 # not. Call them accordingly.
                 try:
-                    # Get the output of the scheduler function
+                    # Get the output of the scheduled function
                     if self.is_async:
                         self.result = asyncio.run(self.func())
                     else:
                         self.result = self.func()
                 except Exception as e:
-                    commandintegrator.logger.log(f"The scheduler job '{self.name}' "
+                    commandintegrator.logger.log(f"The schedule job '{self.name}' "
                                                  f"raised {type(e).__name__}('{str(e)}') "
                                                  f"upon executing it", level="error")
                     print("Job encountered an error:", e)
@@ -246,7 +246,7 @@ class Job(Thread):
                     else:
                         self.recipient(output)
                 except Exception as e:
-                    commandintegrator.logger.log(f"The scheduler job '{self.name}' "
+                    commandintegrator.logger.log(f"The schedule job '{self.name}' "
                                                  f"ran OK but the recipient function "
                                                  f"{self.recipient} raised {type(e).__name__}"
                                                  f"('{str(e)}') ", level="error")

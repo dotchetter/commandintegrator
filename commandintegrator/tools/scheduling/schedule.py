@@ -11,28 +11,8 @@ from commandintegrator.core.decorators import Logger
 from commandintegrator.tools.scheduling.components import Job, TimeTrigger
 
 
-class SchedulerDecoratorBase:
-    """
-    Base class with constructor for
-    inheritance where multiple decorators
-    use the same constructor with custom
-    __call__ implementations
-    """
-    def __init__(self, **decorator_kwargs):
-        if job_kwargs := decorator_kwargs.get("kwargs"):
-            self.timetrigger_kwargs = decorator_kwargs.pop("kwargs")
-        else:
-            job_kwargs = {}
-        self.job_kwargs = job_kwargs
-        self.timetrigger_kwargs = decorator_kwargs
-
-    @abstractmethod
-    def __call__(self, *args, **kwargs):
-        pass
-
-
 # noinspection PyPep8Naming
-class scheduler:
+class schedule:
     """
     Namespacing static class to schedule
     function calls, using TimeTrigger and Job
@@ -53,7 +33,7 @@ class scheduler:
                recipient: Callable=None, start_now=True,
                **kwargs):
         """
-        Registers a new scheduler Job.
+        Registers a new schedule Job.
 
         @param func: Callable to be scheduled - unbound or bound, sync or async
         @param at: str, Timestamp for execution, "HH:MM" ("HH:MM:SS optionally)
@@ -76,7 +56,7 @@ class scheduler:
                               exactly_at=exactly_at)
 
         if not (recipient := recipient):
-            recipient = scheduler.schedule_default_catcher
+            recipient = schedule.schedule_default_catcher
             return_self = True
 
         job = Job(func=functools.partial(func, **kwargs),
@@ -86,10 +66,10 @@ class scheduler:
                   func_name=func.__name__,
                   return_self=return_self)
 
-        # Map job in scheduler and start it
+        # Map job in schedule and start it
         Logger.log(f"Scheduler created job {job}", level="info")
-        scheduler.name_job_map.add(job.func_name, job)
-        scheduler.id_job_map[job.native_id] = job
+        schedule.name_job_map.add(job.func_name, job)
+        schedule.id_job_map[job.native_id] = job
 
         # Start the job, or add it to unstarted for later starts
         if start_now:
@@ -99,8 +79,8 @@ class scheduler:
     def schedule_default_catcher(job: Job) -> None:
         """
         This is the default method for return values of
-        scheduler jobs, if no recipient is specified
-        by the creator of a scheduler job.
+        schedule jobs, if no recipient is specified
+        by the creator of a schedule job.
 
         All Jobs without a designated recipient
         callable will have their return value end
@@ -111,7 +91,7 @@ class scheduler:
         :param job: Job instance which has been executed
                     at least once
         """
-        scheduler.outputs.put(job)
+        schedule.outputs.put(job)
 
     @staticmethod
     def get_jobs(job_name: str = None, job_id: int = None) -> \
@@ -134,13 +114,13 @@ class scheduler:
 
         if job_name:
             try:
-                for job in scheduler.name_job_map.getall(job_name):
+                for job in schedule.name_job_map.getall(job_name):
                     yield job
             except KeyError:
                 yield
         elif job_id:
             try:
-                yield scheduler.id_job_map[int(job_id)]
+                yield schedule.id_job_map[int(job_id)]
             except KeyError:
                 yield
 
@@ -151,7 +131,7 @@ class scheduler:
         :param job_name: str, name of the job
         :param job_id: int, id of the job
         """
-        for job in scheduler.get_jobs(job_name, job_id):
+        for job in schedule.get_jobs(job_name, job_id):
             job.kill_gracefully()
 
     @staticmethod
@@ -161,20 +141,20 @@ class scheduler:
         combined.
         :rtype: Job
         """
-        for i in scheduler.name_job_map.values():
+        for i in schedule.name_job_map.values():
             yield i
 
     @staticmethod
     def has_outputs() -> bool:
         """
         Returns whether there are outputs in
-        the output queue 'scheduler.outputs'
+        the output queue 'schedule.outputs'
         """
-        return bool(scheduler.outputs.qsize())
+        return bool(schedule.outputs.qsize())
 
     @staticmethod
     def get_latest_output():
-        return scheduler.outputs.get()
+        return schedule.outputs.get()
 
     @staticmethod
     def get_unstarted_jobs(name: str = None) -> Tuple[Job]:
@@ -185,9 +165,9 @@ class scheduler:
         @return: Tuple with Jobs
         """
         if name:
-            return tuple([i for i in scheduler.get_jobs(name)
+            return tuple([i for i in schedule.get_jobs(name)
                           if i.running is False])
-        return tuple([i for i in scheduler.get_all_jobs()
+        return tuple([i for i in schedule.get_all_jobs()
                       if i.running is False])
 
     @staticmethod
@@ -198,5 +178,5 @@ class scheduler:
         @param name: Name of the job to start (may start multiple)
         @return: bool, jobs were or were not started
         """
-        return bool([job.start() for job in list(scheduler.get_jobs(name))])
+        return bool([job.start() for job in list(schedule.get_jobs(name))])
 

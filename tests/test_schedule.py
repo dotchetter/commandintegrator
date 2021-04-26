@@ -43,25 +43,25 @@ if __name__ == "__main__":
 
     user = User(name="user")
 
-    ci.scheduler.method(user.get_name,
-                        exactly_at=datetime.now() + timedelta(seconds=10))
+    ci.schedule.method(user.get_name,
+                       exactly_at=datetime.now() + timedelta(seconds=10))
 
-    ci.scheduler.method(user.say_something_async, every="second",
-                        something="run_async", start_now=False)
+    ci.schedule.method(user.say_something_async, every="second",
+                       something="run_async", start_now=False)
 
-    ci.scheduler.method(user.say_something, every="second",
-                        something="every second async")
+    ci.schedule.method(user.say_something, every="second",
+                       something="every second async")
 
-    ci.scheduler.method(add_numbers, every="second", x=1, y=2,
-                        recipient=reciever.async_recieve)
+    ci.schedule.method(add_numbers, every="second", x=1, y=2,
+                       recipient=reciever.async_recieve)
 
-    print("Unstarted jobs:", ci.scheduler.get_unstarted_jobs())
+    print("Unstarted jobs:", ci.schedule.get_unstarted_jobs())
 
     while 1:
         time.sleep(1)
 
         print(user.say_something(something="called explicitly"))
 
-        if ci.scheduler.has_outputs():
-            job = ci.scheduler.outputs.get()
+        if ci.schedule.has_outputs():
+            job = ci.schedule.outputs.get()
             print(job.native_id, "said:", job.result)

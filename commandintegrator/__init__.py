@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .tools.apihandles import RestApiHandle
-from .tools.scheduling.schedule import scheduler
+from .tools.scheduling.schedule import schedule
 
 from .tools.pollcache import PollCache
 from .baseclasses.baseclasses import FeatureBase, FeatureCommandParserBase
