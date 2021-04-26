@@ -251,9 +251,6 @@ class Job(Thread):
                                                  f"{self.recipient} raised {type(e).__name__}"
                                                  f"('{str(e)}') ", level="error")
                     break
-                else:
-                    commandintegrator.logger.log(f"{self} ran successfully", level="info")
-
             if not self.trigger.reoccurring and self.trigger.amount_of_runs > 0:
                 break
             time.sleep(0.01)
