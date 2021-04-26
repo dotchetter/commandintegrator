@@ -1,13 +1,44 @@
+import asyncio
 import functools
 import inspect
+from abc import abstractmethod
 
 from datetime import datetime
 from queue import Queue
-from typing import Dict, Generator, Any, List
+from typing import Dict, Generator, Any, List, Callable
 
 from multidict import MultiDict
+
+from commandintegrator.core.exceptions.schedule import ScheduledMethodException
 from commandintegrator.tools.scheduling.components import Job, TimeTrigger
 from commandintegrator.core.decorators import Logger
+
+
+class SchedulerDecoratorBase:
+    """
+    Base class with constructor for
+    inheritance where multiple decorators
+    use the same constructor with custom
+    __call__ implementations
+    """
+    def __init__(self, **decorator_kwargs):
+        if job_kwargs := decorator_kwargs.get("kwargs"):
+            self.timetrigger_kwargs = decorator_kwargs.pop("kwargs")
+        else:
+            job_kwargs = {}
+        self.job_kwargs = job_kwargs
+        self.timetrigger_kwargs = decorator_kwargs
+
+    @abstractmethod
+    def __call__(self, *args, **kwargs):
+        pass
+
+    def __get__(self, ctx, owner):
+        """
+        Handle context and owner, making the
+        method object a descriptor
+        """
+        return functools.partial(self, ctx)
 
 
 # noinspection PyPep8Naming
@@ -25,11 +56,11 @@ class scheduler:
     id_job_map: Dict[int, Job] = {}
     name_job_map: MultiDict[str, Job] = MultiDict()
     outputs: Queue[Job] = Queue()
-    unstarted: List[Job] = []
+    unstarted: List[Dict] = []
 
     # noinspection PyPep8Naming
     # Decorator
-    class method:
+    class method(SchedulerDecoratorBase):
         """
         Decorator to be used with class methods.
         The decorated method will be scheduled
@@ -40,14 +71,6 @@ class scheduler:
         'kwargs' argument for the scheduler,
         as dict.
         """
-
-        def __init__(self, **decorator_kwargs):
-            if job_kwargs := decorator_kwargs.get("kwargs"):
-                self.timetrigger_kwargs = decorator_kwargs.pop("kwargs")
-            else:
-                job_kwargs = {}
-            self.job_kwargs = job_kwargs
-            self.timetrigger_kwargs = decorator_kwargs
 
         def __call__(self, func):
             """
@@ -61,8 +84,12 @@ class scheduler:
             run as a Job in the background, by passing
             it to _register_job
             """
+            if inspect.iscoroutinefunction(func):
+                raise ValueError(f"Method '{func}' is async and needs to "
+                                 f"be ascheduled as such. Use '@schedule."
+                                 f"asyncmethod' or 'schedule.run_async' instead")
 
-            scheduler.unstarted.append(func)
+            scheduler.unstarted.append({"name": func.__name__, "async": False})
 
             @functools.wraps(func)
             def decorated(*args, **kwargs):
@@ -79,25 +106,75 @@ class scheduler:
                     job_func = functools.partial(func, **self.job_kwargs)
 
                 # Pass the partial function to _register_job to set up a Job
-                scheduler._register_job(job_func, **self.timetrigger_kwargs)
+                scheduler._register_job(job_func, is_async=False,
+                                        **self.timetrigger_kwargs)
                 try:
-                    scheduler.unstarted.remove(func)
+                    scheduler.unstarted.remove(func.__name__)
                 except ValueError:
                     pass
                 return return_value
             return decorated
 
-        def __get__(self, ctx, owner):
+    class asyncmethod(SchedulerDecoratorBase):
+        """
+        Just as schedule.method, but for async
+        methods, since the decorator is also
+        async def.
+        """
+
+        def __call__(self, func):
             """
-            Handle context and owner, making the
-            method object a descriptor
+            Call the decorated function / method, pass
+            context if it's a bound method, else not.
+            Set kwargs for the TimeTrigger name attribute
+            as the function is called by __name__.
+
+            The function is later wrapped as a partial,
+            ready with context and arguments for it being
+            run as a Job in the background, by passing
+            it to _register_job
             """
-            return functools.partial(self, ctx)
+
+            if not inspect.iscoroutinefunction(func):
+                raise ValueError(f"Method '{func}' is synchronous and needs to "
+                                 f"be scheduled as such. Use '@schedule."
+                                 f"method' or 'schedule.run' instead")
+
+            scheduler.unstarted.append({"name": func.__name__, "async": True})
+
+            @functools.wraps(func)
+            async def decorated(*args, **kwargs):
+                # Call the function with it's provided args and kwargs
+                return_value = await func(*args, **kwargs)
+                self.timetrigger_kwargs["func_name"] = func.__name__
+
+                # Method or function? Pass context if method, otherwise not
+                if "self" in inspect.signature(func).parameters:
+                    # Isolate the reference to self, discard args
+                    ctx = args[0] if len(args) else None
+                    job_func = functools.partial(func, ctx, **self.job_kwargs)
+                else:
+                    job_func = functools.partial(func, **self.job_kwargs)
+
+                # Pass the partial function to _register_job to set up a Job
+                scheduler._register_job(job_func, is_async=True,
+                                        **self.timetrigger_kwargs)
+                try:
+                    scheduler.unstarted.remove(func.__name__)
+                except ValueError:
+                    pass
+                return return_value
+            return decorated
 
     @staticmethod
-    def _register_job(func, at: str = None, every: str = None,
-                      delay: str = None, exactly_at: datetime = None,
-                      recipient: str = None, func_name="n/a") -> None:
+    def _register_job(func,
+                      is_async: bool = False,
+                      at: str = None,
+                      every: str = None,
+                      delay: str = None,
+                      exactly_at: datetime = None,
+                      recipient: str = None,
+                      func_name="n/a") -> None:
         """
         Registers a new scheduler Job and starts
         the countdown for the Job.
@@ -136,6 +213,7 @@ class scheduler:
             return_self = True
 
         job = Job(func=func,
+                  is_async=is_async,
                   trigger=trigger,
                   recipient=recipient,
                   func_name=func_name,
@@ -227,3 +305,66 @@ class scheduler:
     @staticmethod
     def get_latest_output():
         return scheduler.outputs.get()
+
+    @staticmethod
+    def start_scheduled_method(func: Callable, *args, **kwargs):
+        """
+        Start the scheudling of a given method
+        by starting it with it's context.
+        Since bound methods need their context
+        in the call to be started, this is
+        a necessary step in scheduling methods.
+
+        Regular functions also fall under this
+        premise, even though they don't actually
+        require this due to the lack of context.
+        However, for idiomatic reasons, it makes
+        sense that no matter the type of callable,
+        they all fall under the same principle,
+        of needint to be explicitly started
+        with this method.
+        """
+        if inspect.iscoroutinefunction(func):
+            asyncio.run(func(*args, **kwargs))
+        else:
+            func(*args, **kwargs)
+
+    @staticmethod
+    def run(func, *args, run_now=True, **kwargs):
+        """
+        Method for scheduling functions without
+        using the decorators, which allows for
+        scheduling jobs during runtime.
+        """
+        func = scheduler.method(*args, **kwargs)(func)
+        if run_now:
+            if func_kwargs := kwargs.get("kwargs"):
+                try:
+                    func(**func_kwargs)
+                except Exception as e:
+                    raise ScheduledMethodException(f"The callable \"{func.__name__}\" "
+                                                   f"did not accept parameters "
+                                                   f"provided in the scheduling: {e}")
+            else:
+                func()
+        return func
+
+    @staticmethod
+    def run_async(func, *args, run_now=True, **kwargs):
+        """
+        Method for scheduling functions without
+        using the decorators, which allows for
+        scheduling jobs during runtime.
+        """
+        func = scheduler.asyncmethod(*args, **kwargs)(func)
+        if run_now:
+            if func_kwargs := kwargs.get("kwargs"):
+                try:
+                    asyncio.run(func(**func_kwargs))
+                except Exception as e:
+                    raise ScheduledMethodException(f"The callable \"{func.__name__}\" "
+                                                   f"did not accept parameters "
+                                                   f"provided in the scheduling: {e}")
+            else:
+                asyncio.run(func())
+        return func

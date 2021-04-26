@@ -172,6 +172,7 @@ class Job(Thread):
     """
 
     def __init__(self, func: Callable,
+                 is_async: bool,
                  trigger: TimeTrigger,
                  recipient: Callable,
                  func_name: str,
@@ -179,6 +180,7 @@ class Job(Thread):
         super().__init__()
         self.kwargs = None
         self.func = func
+        self.is_async = is_async
         self.func_name = func_name
         self.trigger = trigger
         self.recipient = recipient
@@ -191,6 +193,7 @@ class Job(Thread):
     def __repr__(self):
         return f"Job(" \
                f"func_name={self.func_name}, " \
+               f"is_async={self.is_async}, " \
                f"running={self.running}, " \
                f"recipient={self.recipient.__name__}, " \
                f"native_id={self.native_id}, " \
@@ -222,7 +225,7 @@ class Job(Thread):
                 # not. Call them accordingly.
                 try:
                     # Get the output of the scheduler function
-                    if inspect.iscoroutinefunction(self.func):
+                    if self.is_async:
                         self.result = asyncio.run(self.func())
                     else:
                         self.result = self.func()

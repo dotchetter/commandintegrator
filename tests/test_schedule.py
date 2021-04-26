@@ -1,64 +1,103 @@
 import asyncio
+import functools
 import time
+import unittest
 from datetime import datetime
+from unittest import TestCase
 import commandintegrator as ci
 
 
-class TimeFeature:
+class Reciever:
+    async def async_recieve(self, msg=None):
+        print("Async receiver:", msg)
 
-    def __init__(self, offset=0):
-        self.minutes = 0 + offset
+    def recieve(self, msg=None):
+        print("Sync receiver:", msg)
 
-    @ci.scheduler.method(every="wednesday", at="21:46",
-                         kwargs={"country": "sverige", "greeting": "hej"})
-    def get_time(self, country=None, greeting=None):
-        return f"{greeting}! Klockan är {datetime.now().strftime('%H:%M')} i {country}"
-
-    @ci.scheduler.method(every="second")
-    def get_minutes(self, arg=1):
-        self.minutes += arg
-        return f"{self.minutes} seconds passed"
-
-
-async def recieve(msg=None):
-    print("Async receiver:", msg)
-
-
-@ci.scheduler.method(every="second", delay="00:00:15", kwargs={"a": 1, "b": 2}, recipient=print)
-def get_sum(a, b, c=0):
-    return a + b + c
-
-
-class User:
-
-    def __init__(self, name):
-        self.name = name
-
-    @ci.scheduler.method(every="second", delay="00:00:10", recipient=print)
-    async def get_name(self):
-        return self.name
 
 
 if __name__ == "__main__":
 
-    # ci.scheduler.allow_multiple = True
+    def test_sync():
 
-    print("*" * 50, sep="")
+        class User:
 
-    get_sum(1, 1)
+            def __init__(self, name):
+                self.name = name
 
-    urban = User(name="urban")
-    tomas = User(name="tomas")
+            @ci.scheduler.asyncmethod(every="second")
+            async def get_name_async(self):
+                return f"Hi, my name is {self.name} asynchronously"
 
-    print(ci.scheduler.unstarted)
+            @ci.scheduler.method(every="second")
+            def get_name(self):
+                return f"Hi, my name is {self.name} synchronously"
 
-    print(asyncio.run(urban.get_name()))
-    print(asyncio.run(tomas.get_name()))
+        def regular_method_addition(a, b):
+            return a + b
 
-    print(ci.scheduler.unstarted)
+        def say_hello():
+            return "Hello sync!"
 
-    # Simulerar main loop
-    while 1:
-        time.sleep(0.01)
-        if ci.scheduler.has_outputs():
-            print(ci.scheduler.outputs.get())
+        user_1 = User(name="user1")
+        addition = ci.scheduler.run(regular_method_addition,
+                                    every="second", kwargs={"a": 250, "b": 250}, run_now=False)
+        ci.scheduler.run(say_hello, every="second", run_now=False)
+
+        ci.scheduler.start_scheduled_method(user_1.get_name)
+        ci.scheduler.start_scheduled_method(addition, 45, 45)
+        # For decorated
+        ci.scheduler.start_scheduled_method(regular_method_addition, 1, 2)
+
+        while 1:
+            time.sleep(0.01)
+            if ci.scheduler.has_outputs():
+                print(ci.scheduler.outputs.get())
+
+    def test_async():
+
+        class User:
+
+            def __init__(self, name):
+                self.name = name
+
+            @ci.scheduler.asyncmethod(every="second")
+            async def get_name_async(self):
+                return f"Hi, my name is {self.name} asynchronously"
+
+            @ci.scheduler.method(every="second")
+            def get_name(self):
+                return f"Hi, my name is {self.name} synchronously"
+
+        @ci.scheduler.asyncmethod(every="second", delay="00:00:05", kwargs={"something": "Five seconds"})
+        async def async_say_something(something):
+            return f"Hello {something}!"
+
+        # @ci.scheduler.asyncmethod(every="second", delay="00:00:10", kwargs={"a": 45, "b": 0})
+        async def async_regular_method_addition(a, b):
+            return a + b
+
+        user_2 = User(name="user2")
+
+        print(async_say_something)
+        """
+        ci.scheduler.start_scheduled_method(async_say_something, "run_async")
+
+        ci.scheduler.run_async(async_say_something, every="second", delay="00:00:05",
+                               kwargs={"something": "five sec"})
+
+        ci.scheduler.run_async(async_say_something, every="second", delay="00:00:02",
+                               kwargs={"something": "two sec"})
+        """
+        print(async_say_something)
+
+        # For decorated
+        ci.scheduler.start_scheduled_method(user_2.get_name_async)
+
+        while 1:
+            time.sleep(0.01)
+            if ci.scheduler.has_outputs():
+                print(ci.scheduler.outputs.get())
+                print(asyncio.run(user_2.get_name_async()))
+
+    test_async()
