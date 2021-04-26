@@ -1,9 +1,6 @@
-import sys
-from unittest import TestCase
 import time
-import unittest
-from datetime import datetime, timedelta
 from unittest import TestCase
+
 import commandintegrator as ci
 from commandintegrator.tools.scheduling.components import Job
 
@@ -33,7 +30,6 @@ class User:
         return f"I say {something}"
 
 
-@ci.logger.loggedmethod
 def add_numbers(x, y):
     return x + y
 
