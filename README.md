@@ -1,4 +1,4 @@
-# commandintegrator
+# commandintegrator (Archived - See https://github.com/dotchetter/pytman for the revamped and renamed fork)
 
 ## Installation
 `pip install commandintegrator`
